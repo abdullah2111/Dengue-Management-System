@@ -1,0 +1,53 @@
+{% extends 'core/base.html' %}
+{% block title %}Login - DengueCare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to continue to your dashboard</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" 
+                       placeholder="Enter your username or email" required>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" 
+                       placeholder="Enter your password" required>
+                
+            </div>
+            <div class="mb-3">
+                <label for="userType" class="form-label">Select User</label>
+                <select id="userType" class="form-select" name="userType">
+                    <option value="doctor">Doctor</option>
+                    <option value="patient">Patient</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+            </button>
+
+            <div class="form-footer">
+                <span>New to DengueCare? <a href="{% url 'signup' %}">Create account</a></span>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

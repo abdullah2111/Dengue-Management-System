@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block navbar %}
+<!-- Empty block to remove the navbar in patient dashboard -->
+{% endblock navbar %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0" style="height: 100vh; position: fixed; left: 0; top: 0; background-color: #2c3e50;">
+            <!-- Patient Profile Summary -->
+            <div class="text-center p-4 border-bottom border-dark">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-3x text-light"></i>
+                </div>
+                <!-- Check if user is authenticated before showing name -->
+                {% if request.user.is_authenticated %}
+                    <h5 class="text-white mb-1">{{ request.user.full_name }}</h5>
+                {% else %}
+                    <h5 class="text-white mb-1">Guest</h5>
+                {% endif %}
+                
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="p-3 flex-grow-1">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a href="{% url 'check_dengue' %}" class="nav-link text-white">
+                            <i class="fas fa-check-circle me-2"></i> Check Dengue
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="{% url 'track_symptoms' %}" class="nav-link text-white">
+                            <i class="fas fa-notes-medical me-2"></i> Track Symptoms
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="{% url 'doctor_appointment' %}" class="nav-link text-white">
+                            <i class="fas fa-calendar-plus me-2"></i> Doctor Appointment
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="{% url 'patient_profile' %}" class="nav-link text-white">
+                            <i class="fas fa-user-cog me-2"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="p-3 border-top border-dark">
+                <a href="{% url 'logout' %}" class="btn btn-danger w-100">
+                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-md-9 col-lg-10 ms-auto p-4" style="background-color: #f8f9fa; margin-left: 25%;">
+            <div id="content-area">
+                {% block dashboard_content %}
+                <!-- The specific content for each section will be loaded here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

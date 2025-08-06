@@ -1,0 +1,256 @@
+{% extends 'core/base.html' %}
+{% block title %}Sign Up - DengueCare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>Create Your Account</h2>
+            <p>Join DengueCare to begin your health journey</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+                <label for="userType" class="form-label">I am a:</label>
+                <select id="userType" class="form-select" name="userType" onchange="toggleDoctorFields()">
+                    <option value="patient" {% if user_type == 'patient' %}selected{% endif %}>Patient</option>
+                    <option value="doctor" {% if user_type == 'doctor' %}selected{% endif %}>Doctor</option>
+                </select>
+            </div>
+
+            {% if form %}
+                <!-- Render form with errors -->
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                           value="{{ form.full_name.value|default_if_none:'' }}" placeholder="Your full name" required>
+                    {% if form.full_name.errors %}
+                        <div class="text-danger">{{ form.full_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username"
+                           value="{{ form.username.value|default_if_none:'' }}" placeholder="Choose a username" required>
+                    <div class="form-text">This will be used for login</div>
+                    {% if form.username.errors %}
+                        <div class="text-danger">{{ form.username.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email"
+                           value="{{ form.email.value|default_if_none:'' }}" placeholder="example@email.com" required>
+                    {% if form.email.errors %}
+                        <div class="text-danger">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="age" class="form-label">Age</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="age" name="age"
+                                   value="{{ form.age.value|default_if_none:'' }}" placeholder="30" required>
+                            <span class="input-group-text">years</span>
+                        </div>
+                        {% if form.age.errors %}
+                            <div class="text-danger">{{ form.age.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mobile_number" class="form-label">Mobile Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+88</span>
+                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number"
+                                   value="{{ form.mobile_number.value|default_if_none:'' }}" placeholder="1XXXXXXXXXX" required>
+                        </div>
+                        {% if form.mobile_number.errors %}
+                            <div class="text-danger">{{ form.mobile_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label for="password1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password1" name="password1" 
+                           placeholder="Create a strong password" required>
+                    <div class="form-text">At least 8 characters with numbers and symbols</div>
+                    {% if form.password1.errors %}
+                        <div class="text-danger">{{ form.password1.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="password2" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="password2" name="password2" 
+                           placeholder="Confirm your password" required>
+                    {% if form.password2.errors %}
+                        <div class="text-danger">{{ form.password2.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {% if user_type == 'doctor' %}
+                    <div id="doctorFields" class="doctor-fields">
+                        <h5><i class="bi bi-briefcase-medical me-2"></i> Professional Information</h5>
+                        <div class="mb-3">
+                            <label for="degree" class="form-label">Degree</label>
+                            <input type="text" class="form-control" id="degree" name="degree"
+                                   value="{{ form.degree.value|default_if_none:'' }}" placeholder="MD, MBBS, etc." required>
+                            {% if form.degree.errors %}
+                                <div class="text-danger">{{ form.degree.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="specialty" class="form-label">Specialty</label>
+                            <input type="text" class="form-control" id="specialty" name="specialty"
+                                   value="{{ form.specialty.value|default_if_none:'' }}" placeholder="Cardiology, Neurology, etc." required>
+                            {% if form.specialty.errors %}
+                                <div class="text-danger">{{ form.specialty.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="registration_number" class="form-label">Registration Number</label>
+                            <input type="text" class="form-control" id="registration_number" name="registration_number"
+                                   value="{{ form.registration_number.value|default_if_none:'' }}" placeholder="Medical license number" required>
+                            {% if form.registration_number.errors %}
+                                <div class="text-danger">{{ form.registration_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="designation" class="form-label">Designation</label>
+                            <input type="text" class="form-control" id="designation" name="designation"
+                                   value="{{ form.designation.value|default_if_none:'' }}" placeholder="Senior Specialist, etc." required>
+                            {% if form.designation.errors %}
+                                <div class="text-danger">{{ form.designation.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Initial form render without errors -->
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Your full name" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required>
+                    <div class="form-text">This will be used for login</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="example@email.com" required>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="age" class="form-label">Age</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="age" name="age" placeholder="30" required>
+                            <span class="input-group-text">years</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mobile_number" class="form-label">Mobile Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+88</span>
+                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" placeholder="1XXXXXXXXXX" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label for="password1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password1" name="password1" placeholder="Create a strong password" required>
+                    <div class="form-text">At least 8 characters with numbers and symbols</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password2" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirm your password" required>
+                </div>
+
+                <div id="doctorFields" class="doctor-fields" style="display: none;">
+                    <h5><i class="bi bi-briefcase-medical me-2"></i> Professional Information</h5>
+                    <div class="mb-3">
+                        <label for="degree" class="form-label">Degree</label>
+                        <input type="text" class="form-control" id="degree" name="degree" placeholder="MD, MBBS, etc.">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="specialty" class="form-label">Specialty</label>
+                        <input type="text" class="form-control" id="specialty" name="specialty" placeholder="Cardiology, Neurology, etc.">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="registration_number" class="form-label">Registration Number</label>
+                        <input type="text" class="form-control" id="registration_number" name="registration_number" placeholder="Medical license number">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="designation" class="form-label">Designation</label>
+                        <input type="text" class="form-control" id="designation" name="designation" placeholder="Senior Specialist, etc.">
+                    </div>
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="bi bi-person-plus me-2"></i> Create Account
+            </button>
+
+            <div class="form-footer">
+                <span>Already have an account? <a href="{% url 'login' %}">Sign in</a></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleDoctorFields() {
+        const userType = document.getElementById('userType').value;
+        const doctorFields = document.getElementById('doctorFields');
+
+        if (doctorFields) {
+            if (userType === 'doctor') {
+                doctorFields.style.display = 'block';
+                // Make doctor fields required
+                document.getElementById('degree').required = true;
+                document.getElementById('specialty').required = true;
+                document.getElementById('registration_number').required = true;
+                document.getElementById('designation').required = true;
+            } else {
+                doctorFields.style.display = 'none';
+                // Make doctor fields not required
+                document.getElementById('degree').required = false;
+                document.getElementById('specialty').required = false;
+                document.getElementById('registration_number').required = false;
+                document.getElementById('designation').required = false;
+            }
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleDoctorFields();
+    });
+</script>
+{% endblock %}

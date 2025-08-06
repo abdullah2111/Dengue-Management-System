@@ -1,0 +1,279 @@
+{% extends 'core/base_p_dashboard.html' %}
+{% block dashboard_content %}
+<div class="container">
+  <div class="card shadow border-0 rounded-lg overflow-hidden">
+    <div class="card-header bg-primary text-white py-3">
+      <h3 class="mb-0 text-center"><i class="fas fa-thermometer-half me-2"></i> Dengue Symptoms Assessment</h3>
+    </div>
+    <div class="card-body p-4 p-md-5">
+      <form id="dengue-form">
+        {% csrf_token %}
+        <div class="alert alert-info mb-4">
+          <i class="fas fa-info-circle me-2"></i> Rate your symptoms using the color-coded scale below
+        </div>
+
+        <div class="severity-legend mb-4 p-3 bg-light rounded">
+          <div class="row text-center">
+            <div class="col">
+              <span class="border border-success p-2 bg-white"><i class="fas fa-check-circle me-1 text-success"></i> 0 - None</span>
+            </div>
+            <div class="col">
+              <span class="border border-info p-2 bg-white"><i class="fas fa-smile me-1 text-info"></i> 1 - Mild</span>
+            </div>
+            <div class="col">
+              <span class="border border-warning p-2 bg-white"><i class="fas fa-exclamation-circle me-1 text-warning"></i> 2 - Medium</span>
+            </div>
+            <div class="col">
+              <span class="border border-danger p-2 bg-white"><i class="fas fa-times-circle me-1 text-danger"></i> 3 - Severe</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          {% for key, label in symptoms %}
+          <div class="col-md-6">
+            <div class="symptom-card p-3 h-100">
+              <label class="form-label fw-bold text-primary mb-3">{{ label }}</label>
+              <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                <label class="btn border border-success">
+                  <input type="radio" name="{{ key }}" value="0" required> 0
+                  <small class="d-block">None</small>
+                </label>
+                <label class="btn border border-info">
+                  <input type="radio" name="{{ key }}" value="1"> 1
+                  <small class="d-block">Mild</small>
+                </label>
+                <label class="btn border border-warning">
+                  <input type="radio" name="{{ key }}" value="2"> 2
+                  <small class="d-block">Medium</small>
+                </label>
+                <label class="btn border border-danger">
+                  <input type="radio" name="{{ key }}" value="3"> 3
+                  <small class="d-block">Severe</small>
+                </label>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="text-center mt-5">
+          <button type="submit" class="btn btn-primary btn-lg px-4 py-2">
+            <i class="fas fa-check-circle me-2"></i> Analyze Symptoms
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="dengue-result" class="mt-5" style="display: none">
+    <div class="card shadow border-0 rounded-lg overflow-hidden">
+      <div class="card-header bg-success text-white py-3">
+        <h4 class="mb-0 text-center"><i class="fas fa-clipboard-check me-2"></i> Assessment Results</h4>
+      </div>
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="risk-indicator mx-auto mb-3">
+            <div class="risk-circle">
+              <span id="dengue-percentage" class="display-3 fw-bold">0%</span>
+            </div>
+          </div>
+          <p class="lead">Probability of Dengue Infection</p>
+        </div>
+
+        <div class="risk-scale mb-5">
+          <div class="scale-labels d-flex justify-content-between mb-2">
+            <span class="text-success">Low Risk (0-30%)</span>
+            <span class="text-warning">Moderate Risk (30-60%)</span>
+            <span class="text-danger">High Risk (60-100%)</span>
+          </div>
+          <div class="progress" style="height: 20px; border-radius: 10px;">
+            <div id="risk-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                 role="progressbar" style="width: 0%; border-radius: 10px;"></div>
+          </div>
+        </div>
+
+        <div id="recommendation" class="alert alert-light border mt-4" style="display: none;">
+          <div class="d-flex">
+            <div class="flex-shrink-0 me-3">
+              <i class="fas fa-comment-medical text-primary fa-2x"></i>
+            </div>
+            <div>
+              <h5 class="alert-heading">Recommendation</h5>
+              <div id="recommendation-text">
+                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mt-4">
+          <i class="fas fa-exclamation-triangle me-2"></i> 
+          <strong>Important:</strong> This assessment is not a substitute for professional medical diagnosis. 
+          Please consult a healthcare provider for accurate testing and treatment.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.getElementById("dengue-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const symptoms = [
+      "fever", "headache", "nausea", "fatigue", "joint_pain", 
+      "rashes", "back_pain", "eye_pain", "vomiting", "abdominal_pain"
+    ];
+
+    let totalSeverity = 0;
+    let answeredCount = 0;
+
+    symptoms.forEach((symptom) => {
+      const selected = document.querySelector(`input[name="${symptom}"]:checked`);
+      if (selected) {
+        totalSeverity += parseInt(selected.value);
+        answeredCount++;
+      }
+    });
+
+    if (answeredCount === 0) {
+      showAlert("Please rate at least one symptom before submitting.", "danger");
+      return;
+    }
+
+    const maxSeverity = 30;
+    const denguePercentage = Math.min((totalSeverity / maxSeverity) * 100, 100).toFixed(2);
+
+    // Update UI
+    document.getElementById("dengue-result").style.display = "block";
+    document.getElementById("dengue-percentage").innerText = denguePercentage + "%";
+
+    const riskBar = document.getElementById("risk-bar");
+    riskBar.style.width = denguePercentage + "%";
+    
+    // Adjust progress bar color based on risk level
+    let recommendation = "";
+    if (denguePercentage < 30) {
+      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-success";
+      recommendation = "Your symptoms indicate a low probability of dengue. However, monitor your symptoms and seek medical attention if they worsen.";
+    } else if (denguePercentage < 60) {
+      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-warning";
+      recommendation = "Your symptoms suggest a moderate probability of dengue. Consider consulting a healthcare provider for further evaluation.";
+    } else {
+      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-danger";
+      recommendation = "Your symptoms indicate a high probability of dengue. Please seek medical attention as soon as possible.";
+    }
+
+    // Show recommendation
+    document.getElementById("recommendation-text").innerHTML = recommendation;
+    document.getElementById("recommendation").style.display = "block";
+
+    // Scroll to result
+    document.getElementById("dengue-result").scrollIntoView({ behavior: "smooth" });
+  });
+
+  // Add active class to selected buttons
+  document.querySelectorAll('.btn-group-toggle .btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Remove active class from siblings
+      this.parentNode.querySelectorAll('.btn').forEach(sibling => {
+        sibling.classList.remove('bg-success', 'bg-info', 'bg-warning', 'bg-danger', 'text-white');
+      });
+      
+      // Add appropriate class based on button type
+      if (this.classList.contains('border-success')) {
+        this.classList.add('bg-success', 'text-white');
+      } else if (this.classList.contains('border-info')) {
+        this.classList.add('bg-info', 'text-white');
+      } else if (this.classList.contains('border-warning')) {
+        this.classList.add('bg-warning', 'text-white');
+      } else if (this.classList.contains('border-danger')) {
+        this.classList.add('bg-danger', 'text-white');
+      }
+    });
+  });
+
+  function showAlert(message, type) {
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    const form = document.getElementById("dengue-form");
+    form.prepend(alertDiv);
+    
+    setTimeout(() => {
+      alertDiv.classList.remove("show");
+      alertDiv.classList.add("fade");
+      setTimeout(() => alertDiv.remove(), 150);
+    }, 5000);
+  }
+</script>
+
+<style>
+  .symptom-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #0d6efd;
+    transition: all 0.3s ease;
+  }
+  
+  .symptom-card:hover {
+    background-color: #f1f8ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-group-toggle .btn {
+    padding: 0.5rem;
+    text-align: center;
+    background-color: white;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-group-toggle .btn:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .severity-legend {
+    border: 1px solid #dee2e6;
+  }
+  
+  .risk-indicator {
+    max-width: 250px;
+  }
+  
+  .risk-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 8px solid #e9ecef;
+  }
+  
+  @media (max-width: 768px) {
+    .risk-circle {
+      width: 150px;
+      height: 150px;
+    }
+    
+    #dengue-percentage {
+      font-size: 2.5rem;
+    }
+    
+    .severity-legend .col {
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>
+{% endblock %}

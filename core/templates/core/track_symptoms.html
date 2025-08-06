@@ -1,0 +1,168 @@
+{% extends 'core/base_p_dashboard.html' %} {% block dashboard_content %}
+<div class="container py-4">
+
+  <div class="card shadow border-0 mb-4 p-md-4">
+    <div class="card-body">
+      <h3 class="text-center text-primary fw-bold mb-4">Track Your Daily Symptoms</h3>
+      <p class="text-muted text-center mb-4">Select a symptom and its severity to log it for today.</p>
+
+      <form method="POST" id="symptom-form" class="row g-4 justify-content-center">
+        {% csrf_token %}
+
+        <div class="col-12 col-md-8">
+          <label class="form-label fw-semibold">Symptom</label>
+          <select name="symptom" id="symptom-select" class="form-select form-select-lg" required>
+            <option value="" disabled selected>Select a symptom...</option>
+            {% for key, label in symptom_choices %}
+              <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-8 text-center" id="severity-container" style="display: none;">
+          <label class="form-label fw-semibold d-block mb-3">Severity</label>
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="severity" id="severity-1" value="1" required>
+            <label class="btn btn-outline-success" for="severity-1">Mild</label>
+
+            <input type="radio" class="btn-check" name="severity" id="severity-2" value="2">
+            <label class="btn btn-outline-warning" for="severity-2">Medium</label>
+
+            <input type="radio" class="btn-check" name="severity" id="severity-3" value="3">
+            <label class="btn btn-outline-danger" for="severity-3">Severe</label>
+          </div>
+        </div>
+
+        <div class="col-12 text-center mt-4">
+          <button type="submit" id="submit-btn" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-plus-circle me-1"></i> Add Symptom
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow border-0">
+    <div class="card-body">
+      <h5 class="text-muted mb-4">All Symptoms Logs</h5>
+
+      {% if symptom_logs_by_date %}
+      <div id="symptom-log-container">
+        {% for date_logged, logs_for_day in symptom_logs_by_date.items %}
+          <h6 class="text-primary fw-bold mt-4 mb-3">
+              {% if date_logged == 'now'|date:"Y-m-d"|stringformat:"s" %}
+                  Today
+              {% else %}
+                  {{ date_logged|date:"F d, Y" }}
+              {% endif %}
+          </h6>
+
+          <ul class="list-group list-group-flush mb-4">
+            {% for log in logs_for_day %}
+            <li class="list-group-item d-flex justify-content-between align-items-center animate-fade-in">
+              <div id="log-view-{{ log.id }}" class="d-flex w-100 justify-content-between align-items-center">
+                <div class="me-auto">
+                  <span class="fw-bold">{{ log.symptom|title }}</span>
+                  <small class="text-muted d-block">Logged on {{ log.date_logged|date:"F d, Y" }}</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  {% if log.severity == 3 %}
+                    <span class="badge bg-danger rounded-pill">Severe</span>
+                  {% elif log.severity == 2 %}
+                    <span class="badge bg-warning text-dark rounded-pill">Medium</span>
+                  {% elif log.severity == 1 %}
+                    <span class="badge bg-primary rounded-pill">Mild</span>
+                  {% endif %}
+
+                  <button type="button" class="btn btn-sm btn-outline-secondary edit-btn" data-log-id="{{ log.id }}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+
+                  <a href="{% url 'delete_symptom_log' log.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this symptom log?');">
+                    <i class="fas fa-trash-alt"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div id="log-edit-{{ log.id }}" class="d-none w-100">
+                <form action="{% url 'edit_symptom_log' log.id %}" method="POST" class="d-flex align-items-center w-100">
+                  {% csrf_token %}
+                  <div class="me-auto">
+                    <span class="fw-bold">{{ log.symptom|title }}</span>
+                    <small class="text-muted d-block">Logged on {{ log.date_logged|date:"F d, Y" }}</small>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group" role="group">
+                      <input type="radio" class="btn-check" name="severity" id="edit-severity-1-{{ log.id }}" value="1" {% if log.severity == 1 %}checked{% endif %}>
+                      <label class="btn btn-outline-success" for="edit-severity-1-{{ log.id }}">Mild</label>
+
+                      <input type="radio" class="btn-check" name="severity" id="edit-severity-2-{{ log.id }}" value="2" {% if log.severity == 2 %}checked{% endif %}>
+                      <label class="btn btn-outline-warning" for="edit-severity-2-{{ log.id }}">Medium</label>
+
+                      <input type="radio" class="btn-check" name="severity" id="edit-severity-3-{{ log.id }}" value="3" {% if log.severity == 3 %}checked{% endif %}>
+                      <label class="btn btn-outline-danger" for="edit-severity-3-{{ log.id }}">Severe</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary cancel-edit-btn" data-log-id="{{ log.id }}"><i class="fas fa-times"></i></button>
+                  </div>
+                </form>
+              </div>
+
+            </li>
+            {% endfor %}
+          </ul>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="text-muted" id="no-logs-message">No symptoms added yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const symptomSelect = document.getElementById('symptom-select');
+    const severityContainer = document.getElementById('severity-container');
+    
+    // Show severity buttons when a symptom is selected
+    symptomSelect.addEventListener('change', function() {
+      severityContainer.style.display = 'block';
+    });
+
+    // New logic for inline editing (remains the same)
+    const symptomLogContainer = document.getElementById('symptom-log-container');
+
+    if (symptomLogContainer) {
+      symptomLogContainer.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('.edit-btn');
+        const cancelBtn = e.target.closest('.cancel-edit-btn');
+        
+        if (editBtn) {
+          const logId = editBtn.dataset.logId;
+          document.getElementById(`log-view-${logId}`).classList.add('d-none');
+          document.getElementById(`log-edit-${logId}`).classList.remove('d-none');
+        }
+
+        if (cancelBtn) {
+          const logId = cancelBtn.dataset.logId;
+          document.getElementById(`log-view-${logId}`).classList.remove('d-none');
+          document.getElementById(`log-edit-${logId}`).classList.add('d-none');
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+</style>
+{% endblock %}
