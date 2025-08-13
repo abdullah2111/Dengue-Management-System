@@ -78,3 +78,26 @@ class AppointmentSchedule(models.Model):
 
     def __str__(self):
         return f"Schedule for {self.doctor.user.full_name}"
+    
+
+
+
+
+class AppointmentBooking(models.Model):
+    PENDING = 'pending'
+    CONFIRMED = 'confirmed'
+    REJECTED = 'rejected'
+    
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (CONFIRMED, 'Confirmed'),
+        (REJECTED, 'Rejected'),
+    ]
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    schedule = models.ForeignKey(AppointmentSchedule, on_delete=models.CASCADE)
+    booked_on = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Default is 'pending'
+
+    def __str__(self):
+        return f"Appointment with {self.schedule.doctor.user.full_name} for {self.patient.user.full_name} - Status: {self.get_status_display()}"

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages  
 from django.contrib.auth import logout, login, authenticate
 from .forms import PatientSignUpForm, DoctorSignUpForm, SymptomLogForm, AppointmentScheduleForm
-from .models import User, Patient, Doctor, SymptomLog, SYMPTOM_CHOICES, AppointmentSchedule
+from .models import User, Patient, Doctor, SymptomLog, SYMPTOM_CHOICES, AppointmentSchedule, AppointmentBooking
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import date
@@ -30,22 +30,23 @@ def signup_view(request):
         if user_type == 'patient':
             form = PatientSignUpForm(request.POST)
         else:
-            form = DoctorSignUpForm(request.POST)
+            form = DoctorSignUpForm(request.POST) # Use the DoctorSignUpForm
         
         if form.is_valid():
-            user = form.save()  # Save the User instance
+            user = form.save()  # This now creates both User and Doctor/Patient
             
-            if user_type == 'doctor':
-                Doctor.objects.create(
-                    user=user,
-                    degree=form.cleaned_data['degree'],
-                    specialty=form.cleaned_data['specialty'],
-                    registration_number=form.cleaned_data['registration_number'],
-                    designation=form.cleaned_data['designation']
-                )
-            else:
-                # If the user is a patient, create the Patient instance
-                Patient.objects.create(user=user)  # Create a corresponding Patient instance
+            # The following block is now redundant and should be removed.
+            # if user_type == 'doctor':
+            #     Doctor.objects.create(
+            #         user=user,
+            #         degree=form.cleaned_data['degree'],
+            #         specialty=form.cleaned_data['specialty'],
+            #         registration_number=form.cleaned_data['registration_number'],
+            #         designation=form.cleaned_data['designation']
+            #     )
+            # else:
+            #     # If the user is a patient, create the Patient instance
+            #     Patient.objects.create(user=user)
             
             login(request, user)
             messages.success(request, 'Account created successfully!')
@@ -56,12 +57,12 @@ def signup_view(request):
                     messages.error(request, f"{field}: {error}")
     else:
         form = None
-    
+        user_type = 'patient'
+
     return render(request, 'core/signup.html', {
         'form': form,
-        'user_type': request.POST.get('userType', 'patient') if request.method == 'POST' else 'patient'
+        'user_type': request.POST.get('userType', 'patient') if request.method == 'POST' else user_type
     })
-
 
 
 def login_user(request):
@@ -194,11 +195,35 @@ def delete_symptom_log(request, log_id):
 
 
 
-
-
-
+@login_required
 def doctor_appointment(request):
-    return render(request, 'core/doctor_appointment.html')
+    try:
+        patient_instance = Patient.objects.get(user=request.user)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient not found.')
+        return redirect('home')
+
+    # Get the available appointment schedules for all doctors
+    schedules = AppointmentSchedule.objects.filter(status='available')
+    
+    # Handle appointment booking if the patient is making a request
+    if request.method == 'POST':
+        schedule_id = request.POST.get('schedule_id')
+        schedule = get_object_or_404(AppointmentSchedule, id=schedule_id)
+        if not AppointmentBooking.objects.filter(patient=patient_instance, schedule=schedule).exists():
+            # Create a new booking
+            AppointmentBooking.objects.create(patient=patient_instance, schedule=schedule)
+            messages.success(request, f"Appointment booked with Dr. {schedule.doctor.user.full_name}!")
+        else:
+            messages.warning(request, 'You have already booked this appointment.')
+
+    context = {
+        'schedules': schedules,
+    }
+    return render(request, 'core/doctor_appointment.html', context)
+
+
+
 
 @login_required
 def patient_profile(request):
