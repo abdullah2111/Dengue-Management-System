@@ -9,7 +9,8 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
 
 
-    path('patient_dashboard/', views.patient_dashboard, name='patient_dashboard'),  
+    path('patient_dashboard/', views.patient_dashboard, name='patient_dashboard'), 
+    path('patientDashboard/', views.patientDashboard, name='PatientDashboard'), 
     path('check_dengue/', views.check_dengue, name='check_dengue'),
     path('track_symptoms/', views.track_symptoms, name='track_symptoms'),
     path('edit_symptom_log/<int:log_id>/', views.edit_symptom_log, name='edit_symptom_log'),
@@ -24,6 +25,7 @@ urlpatterns = [
     path('edit_appointment_schedule/', views.edit_schedule, name='edit_appointment_schedule'),
     path('delete_appointment_schedule/<int:schedule_id>/', views.delete_schedule, name='delete_appointment_schedule'),
     path('view_appointments/', views.view_appointments, name='view_appointments'),
+    path('change_appointment_status/<int:appointment_id>/', views.change_appointment_status, name='change_appointment_status'),
     path('view_patients/', views.view_patients, name='view_patients'),
     path('doctor_profile/', views.doctor_profile, name='doctor_profile'),
     path('edit_doctor_profile/', views.edit_doctor_profile, name='edit_doctor_profile'),

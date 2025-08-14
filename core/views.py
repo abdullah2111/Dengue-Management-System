@@ -94,6 +94,31 @@ def patient_dashboard(request):
     return render(request, 'core/base_p_dashboard.html')
 
 
+@login_required
+def patientDashboard(request):
+    try:
+        # Get the logged-in patient instance
+        patient_instance = Patient.objects.get(user=request.user)
+
+        # Fetch the patient's appointments (filtering by the patient)
+        appointments = AppointmentBooking.objects.filter(patient=patient_instance).order_by('-booked_on')
+
+        # If there are no appointments
+        if not appointments:
+            message = "No appointments scheduled today."
+        else:
+            message = None
+
+    except Patient.DoesNotExist:
+        appointments = None
+        message = "No appointments found."
+
+    return render(request, 'core/patientDashboard.html', {
+        'appointments': appointments,
+        'message': message,
+    })
+
+
 
 def check_dengue(request):
     symptoms = [
@@ -202,7 +227,7 @@ def doctor_appointment(request):
     except Patient.DoesNotExist:
         messages.error(request, 'Patient not found.')
         return redirect('home')
-
+    
     # Get the available appointment schedules for all doctors
     schedules = AppointmentSchedule.objects.filter(status='available')
     
@@ -345,8 +370,45 @@ def delete_schedule(request, schedule_id):
 
 
 
+@login_required
 def view_appointments(request):
-    return render(request, 'core/view_appointments.html')
+    try:
+        # Get the logged-in doctor instance
+        doctor_instance = Doctor.objects.get(user=request.user)
+
+        # Fetch all appointments related to the doctor
+        appointments = AppointmentBooking.objects.filter(schedule__doctor=doctor_instance).order_by('-booked_on')
+
+    except Doctor.DoesNotExist:
+        appointments = None
+        messages.error(request, "Doctor not found.")
+
+    return render(request, 'core/view_appointments.html', {
+        'appointments': appointments
+    })
+
+
+
+@login_required
+def change_appointment_status(request, appointment_id):
+    if request.method == 'POST':
+        appointment = get_object_or_404(AppointmentBooking, id=appointment_id)
+
+        # Ensure that the logged-in doctor is the one associated with this appointment
+        if appointment.schedule.doctor.user == request.user:
+            new_status = request.POST.get('status')
+            if new_status in ['pending', 'confirmed', 'rejected']:
+                appointment.status = new_status
+                appointment.save()
+                messages.success(request, 'Appointment status updated successfully!')
+            else:
+                messages.error(request, 'Invalid status selected.')
+        else:
+            messages.error(request, 'You do not have permission to change this appointment.')
+
+    return redirect('view_appointments')
+
+
 
 def view_patients(request):
     return render(request, 'core/view_patients.html')

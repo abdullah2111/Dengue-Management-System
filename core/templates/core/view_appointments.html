@@ -1,6 +1,67 @@
 {% extends 'core/base_d_dashboard.html' %}
 
 {% block dashboard_content %}
-<h2>appointment view</h2>
-<p>This is your  view appointment</p>
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Upcoming Appointments</h2>
+    </div>
+    <div class="card-body">
+        {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Patient Name</th>
+                            <th scope="col">Appointment Time</th>
+                            <th scope="col">Booked On</th>
+                            <th scope="col">Fee</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td>{{ appointment.patient.user.full_name }}</td>
+                            <td>{{ appointment.schedule.available_days }} - {{ appointment.schedule.available_time }}</td>
+                            <td>{{ appointment.booked_on|date:"F d, Y H:i" }}</td>
+                            <td><span class="badge bg-success">৳{{ appointment.schedule.appointment_fee }}</span></td>
+                            <td>
+                                {% if appointment.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'confirmed' %}
+                                    <span class="badge bg-success">{{ appointment.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{% url 'change_appointment_status' appointment.id %}" class="d-flex justify-content-center">
+                                    {% csrf_token %}
+                                    <select name="status" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                                        <option value="pending" {% if appointment.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="confirmed" {% if appointment.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                        <option value="rejected" {% if appointment.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <p class="lead text-muted">You have no appointments at the moment.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <h4 class="alert-heading">No Appointments</h4>
+                <p>There are no appointments to display at this time.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

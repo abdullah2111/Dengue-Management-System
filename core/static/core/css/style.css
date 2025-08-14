@@ -162,3 +162,15 @@
         font-size: 0.85rem;
         color: #6c757d;
     }
+
+
+
+
+
+
+
+
+    /* nav item active */
+    .sidebar .nav-link.active {
+    background-color: #3498db;
+    }

@@ -51,30 +51,30 @@
         {% endif %}
     </div>
 
-    <div class="p-3">
+   <div class="p-2">
         <ul class="nav flex-column">
             <li class="nav-item mb-2">
-                <a href="{% url 'doctorDashboard' %}" class="nav-link">
+                <a href="{% url 'doctorDashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'doctorDashboard' %}active{% endif %}">
                     <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'appointment_schedule' %}" class="nav-link">
-                    <i class="fas fa-calendar-plus me-2"></i> Appointment Schedule
+                <a href="{% url 'appointment_schedule' %}" class="nav-link {% if request.resolver_match.url_name == 'appointment_schedule' %}active{% endif %}">
+                   <i class="fas fa-calendar-plus me-2"></i> Appointment Schedule
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'view_appointments' %}" class="nav-link">
+                <a href="{% url 'view_appointments' %}" class="nav-link {% if request.resolver_match.url_name == 'view_appointments' %}active{% endif %}">
                     <i class="fas fa-list me-2"></i> Appointments
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'view_patients' %}" class="nav-link">
+                <a href="{% url 'view_patients' %}" class="nav-link {% if request.resolver_match.url_name == 'view_patients' %}active{% endif %}">
                     <i class="fas fa-procedures me-2"></i> Patients
                 </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'doctor_profile' %}" class="nav-link">
+                <a href="{% url 'doctor_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'doctor_profile' %}active{% endif %}">
                     <i class="fas fa-user-cog me-2"></i> Profile
                 </a>
             </li>

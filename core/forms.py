@@ -4,6 +4,7 @@ from .models import User
 from .models import SymptomLog
 from .models import AppointmentSchedule
 from .models import Doctor
+from .models import Patient
 
 
 
@@ -20,10 +21,21 @@ class BaseSignUpForm(UserCreationForm):
 
 class PatientSignUpForm(BaseSignUpForm):
     def save(self, commit=True):
+        # Create the User object
         user = super().save(commit=False)
         user.is_patient = True
-        if commit:
-            user.save()
+        user.is_doctor = False
+        user.email = self.cleaned_data.get('email')
+        user.full_name = self.cleaned_data.get('full_name')
+        user.age = self.cleaned_data.get('age')
+        user.mobile_number = self.cleaned_data.get('mobile_number')
+        user.save()
+        
+        # Create the Patient object
+        patient = Patient.objects.create(
+            user=user,
+            # Add any additional patient-specific fields if you have them
+        )
         return user
 
 class DoctorSignUpForm(UserCreationForm):
