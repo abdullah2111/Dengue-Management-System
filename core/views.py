@@ -110,9 +110,10 @@ def patient_dashboard(request):
 
 
 
+
+
 # Load the model and features once when the server starts
 try:
-    # UPDATED: Use the new file names
     model = joblib.load('ml_model/risk_model.pkl')
     model_features = joblib.load('ml_model/features.pkl')
 except FileNotFoundError:
@@ -128,115 +129,104 @@ HIGH_RISK_SYMPTOMS = [
 ]
 
 def get_patient_features(patient):
-    """
-    Extracts features from patient logs in the format the model expects.
-    UPDATED: Now includes the count of non-severe symptoms.
-    """
+    """Extracts features in the exact format the model expects"""
     last_7_days = timezone.now().date() - timedelta(days=7)
     recent_logs = SymptomLog.objects.filter(patient=patient, date_logged__gte=last_7_days)
 
-    features = {feature: 0 for feature in model_features}
+    features = {
+        'age': patient.user.age if patient.user.age else 30,
+        'days_with_symptoms': 0,
+        'non_severe_symptom_count': 0,
+        'has_fever': 0,
+    }
+    
+    for symptom in HIGH_RISK_SYMPTOMS:
+        features[f'has_{symptom.replace(" ", "_")}'] = 0
 
     if recent_logs.exists():
-        features['age'] = patient.user.age if patient.user.age else 30
-        features['days_with_symptoms'] = (timezone.now().date() - recent_logs.order_by('date_logged').first().date_logged).days + 1
+        features['days_with_symptoms'] = (timezone.now().date() - recent_logs.order_by('date_logged').first().date_logged).days
         
-        # Calculate the non-severe symptom count
         non_severe_count = 0
+        has_fever = 0
         for log in recent_logs:
             if log.symptom not in HIGH_RISK_SYMPTOMS:
                 non_severe_count += 1
+                if log.symptom == 'fever':
+                    has_fever = 1
+            elif log.symptom in HIGH_RISK_SYMPTOMS:
+                features[f'has_{log.symptom.replace(" ", "_")}'] = 1
+        
         features['non_severe_symptom_count'] = non_severe_count
+        features['has_fever'] = has_fever
 
-        # Set flags for high-risk symptoms
-        for symptom in HIGH_RISK_SYMPTOMS:
-            feature_name = f'has_{symptom.replace(" ", "_")}'
-            if recent_logs.filter(symptom=symptom).exists():
-                features[feature_name] = 1
-
-    return pd.DataFrame([features], columns=model_features)
-
+    return pd.DataFrame([features])
 
 
 @login_required
 def patientDashboard(request):
     appointments = None
-    message = "Your health risk is currently low. Keep logging your symptoms."
     risk_level = 'low'
-    risk_score = 0.0  # Default risk score
-
-    # Define a threshold for a high number of non-severe symptoms
-    NON_SEVERE_SYMPTOM_THRESHOLD = 7
+    message = "Your health risk is currently low. Keep logging your symptoms. ✅"
 
     try:
         patient_instance = Patient.objects.get(user=request.user)
-
-        # 1. Rule-Based Override for Immediate Critical Symptoms
         last_24_hours = timezone.now() - timedelta(hours=24)
-        critical_logs = SymptomLog.objects.filter(
-            patient=patient_instance,
-            date_logged__gte=last_24_hours,
-            symptom__in=HIGH_RISK_SYMPTOMS
-        )
         
-        if critical_logs.exists():
-            # If severe symptoms are detected, set the risk level to high
-            severe_symptoms_logged = [log.symptom for log in critical_logs]
-            risk_level = 'high'
-            risk_score = 1.0  # Severe symptoms set risk to 100%
-            message = f"**Severe symptoms detected:** {', '.join(severe_symptoms_logged)}. Please visit a hospital immediately. ⚠️"
+        # Check if any logs exist at all
+        if not SymptomLog.objects.filter(patient=patient_instance).exists():
+            message = "No symptoms logged. Please track your symptoms to get a health overview."
+            risk_level = 'low'
         
         else:
-            # 2. Rule-based check for a high number of non-severe symptoms
-            recent_non_severe_logs = SymptomLog.objects.filter(
-                patient=patient_instance,
-                date_logged__gte=last_24_hours,
-            ).exclude(symptom__in=HIGH_RISK_SYMPTOMS)
-
-            if recent_non_severe_logs.count() >= NON_SEVERE_SYMPTOM_THRESHOLD:
-                # If the number of non-severe symptoms exceeds the threshold, set medium risk
-                risk_level = 'medium'
-                risk_score = 0.5  # Medium risk
-                message = f"**Multiple symptoms detected:** You have logged a high number of non-severe symptoms in the last 24 hours. Please monitor your condition closely and consider consulting a doctor. ⚠️"
+            # 1. Immediate Critical Symptom Detection
+            severe_symptoms = [log.symptom for log in SymptomLog.objects.filter(patient=patient_instance, date_logged__gte=last_24_hours, symptom__in=HIGH_RISK_SYMPTOMS)]
+            
+            if severe_symptoms:
+                risk_level = 'high'
+                message = f"Critical symptoms detected: {', '.join(severe_symptoms)}. Seek immediate medical attention! ⚠️"
+            
+            # 2. AI Model Assessment for all other cases
+            elif model and model_features:
+                features_df = get_patient_features(patient_instance)
+                
+                # Ensure all features are present for the model
+                for feature in model_features:
+                    if feature not in features_df.columns:
+                        features_df[feature] = 0
+                features_df = features_df[model_features]
+                
+                risk_probability = model.predict_proba(features_df)[0][1] * 100
+                
+                if risk_probability >= 70:
+                    risk_level = 'high'
+                    message = "Your symptoms suggest high risk. Please seek medical attention immediately. ⚠️"
+                elif risk_probability >= 30:
+                    risk_level = 'medium'
+                    message = "Your symptoms suggest moderate risk. Consider consulting a doctor."
+                else:
+                    risk_level = 'low'
+                    message = "No significant symptoms detected. Your health risk is low. ✅"
             
             else:
-                # 3. AI-Powered Risk Analysis (only if no other rules are triggered)
-                if model and model_features:
-                    patient_features_df = get_patient_features(patient_instance)
-                    
-                    # Predict the probability of a severe outcome (class 1)
-                    raw_score = model.predict_proba(patient_features_df)[0][1] * 100
-                    
-                    # Define risk thresholds based on the model's output
-                    if raw_score > 70:
-                        risk_level = 'high'
-                        risk_score = 1.0  # Set risk to 100% for high risk
-                        message = "Your risk level is high. Please consult a doctor immediately. ⚠️"
-                    elif raw_score > 30:
-                        risk_level = 'medium'
-                        risk_score = 0.5  # Set risk to 50% for medium risk
-                        message = "Your risk level is medium. Monitor your symptoms closely and consider a doctor's consultation. ⚠️"
-                    else:
-                        risk_level = 'low'
-                        risk_score = (raw_score * 0.3)  # Set risk to a dynamic value between 0 and 30%
-                        message = "Your health risk is currently low. Keep logging your symptoms. ✅"
-                else:
-                    message = "The risk analysis model is not available. Please contact support."
-
-        # 4. Fetch Appointments
+                message = "The risk analysis model is not available. Please contact support."
+        
+        # Fetch appointments
         appointments = AppointmentBooking.objects.filter(patient=patient_instance).order_by('-booked_on')
-        if not appointments:
-            message = "No appointments scheduled."
+        if not appointments and risk_level == 'low':
+            message += " You have no appointments scheduled."
 
     except Patient.DoesNotExist:
-        message = "No patient data found for this account. Please ensure your profile is complete."
+        message = "No patient data found for this account."
+        risk_level = 'low'
 
     return render(request, 'core/patientDashboard.html', {
         'appointments': appointments,
         'message': message,
         'risk_level': risk_level,
-        'risk_score': risk_score * 100,  # Send percentage for visual display
     })
+
+
+
 
 
 

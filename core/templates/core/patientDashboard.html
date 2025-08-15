@@ -1,55 +1,158 @@
 {% extends 'core/base_p_dashboard.html' %}
 
 {% block dashboard_content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card bg-primary text-white shadow-lg border-0 rounded-lg">
+<div class="container-fluid py-4 px-lg-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0 shadow-sm">
                 <div class="card-body p-4 p-md-5">
-                    <h2 class="card-title h3 font-weight-bold mb-2">Welcome back, {{ request.user.full_name }}! 👋</h2>
-                    <p class="card-text text-light">Here is a quick overview of your appointments and health status.</p>
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <h2 class="h4 font-weight-bold mb-2">Welcome back, {{ request.user.full_name }}! 👋</h2>
+                            <p class="mb-0 text-light">Here's your personalized health overview</p>
+                        </div>
+                        <div class="ml-auto d-none d-md-block">
+                            <i class="fas fa-user-md fa-3x opacity-25"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card shadow-lg border-0 rounded-lg">
-                <div class="card-body p-4">
-                    <h4 class="mb-3 font-weight-bold text-primary">Your Risk Level</h4>
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">Health Status</h5>
+                </div>
+                <div class="card-body">
                     {% if risk_level == 'high' %}
-                        <div class="alert alert-danger shadow-sm border-0 rounded-lg p-3" role="alert">
-                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
-                                <i class="fas fa-exclamation-triangle mr-3"></i>
-                                High Risk Alert!
-                            </h5>
-                            <p class="mb-0">{{ message | safe }}</p>
+                        <div class="alert-content">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger mr-3 me-1"></i>
+                                <h4 class="mb-0 font-weight-bold text-danger">High Risk Alert</h4>
+                            </div>
+                            <div class="mb-3">{{ message | safe }}</div>
+                            <div class="alert alert-danger-light bg-danger-light-10 border-left border-danger border-3 p-3">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                                    <div class="mb-2 mb-md-0 text-danger">
+                                        <i class="fas fa-exclamation-circle mr-2"></i> Immediate medical attention required
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="tel:999" class="btn btn-danger">
+                                            <i class="fas fa-phone-alt mr-2"></i> Emergency Call (999)
+                                        </a>
+                                        <a href="https://www.google.com/maps/search/hospital+near+me" 
+                                           target="_blank" 
+                                           class="btn btn-outline-danger">
+                                            <i class="fas fa-hospital mr-2"></i> Find Nearest Hospital
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     {% elif risk_level == 'medium' %}
-                        <div class="alert alert-warning shadow-sm border-0 rounded-lg p-3" role="alert">
-                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle mr-3"></i>
-                                Warning!
-                            </h5>
-                            <p class="mb-0">{{ message | safe }}</p>
+                        <div class="alert-content">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-exclamation-circle fa-2x text-warning mr-3"></i>
+                                <h4 class="mb-0 font-weight-bold text-warning">Warning Notice</h4>
+                            </div>
+                            <div class="mb-3">{{ message | safe }}</div>
+                            <div class="alert alert-warning-light bg-warning-light-10 border-left border-warning border-3 p-3 small">
+                                <i class="fas fa-calendar-check mr-2"></i> Consider scheduling a check-up soon
+                            </div>
                         </div>
                     {% else %}
-                        <div class="alert alert-success shadow-sm border-0 rounded-lg p-3" role="alert">
-                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
-                                <i class="fas fa-check-circle mr-3"></i>
-                                Low Risk
-                            </h5>
-                            <p class="mb-0">{{ message | safe }}</p>
+    <div class="alert-content">
+        <div class="d-flex align-items-center mb-3">
+            {% if "no symptoms" in message|lower %}
+                <i class="fas fa-smile fa-2x text-success mr-3 me-1"></i>
+                <h4 class="mb-0 font-weight-bold text-success">No Symptoms Detected</h4>
+            {% else %}
+                <i class="fas fa-check-circle fa-2x text-success mr-3 me-1"></i>
+                <h4 class="mb-0 font-weight-bold text-success">Low Risk Status</h4>
+            {% endif %}
+        </div>
+        <div class="mb-3">{{ message | safe }}</div>
+        <div class="alert alert-success-light bg-success-light-10 border-left border-success border-3 p-3">
+            <div class="d-flex align-items-start">
+                
+                <div>
+                    <h5 class="font-weight-bold text-success mb-2">Health Maintenance Tips</h5>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Drink plenty of fluids (8-10 glasses daily) to stay hydrated</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Get 7-9 hours of quality sleep each night</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Eat balanced meals with fruits and vegetables</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Practice stress-reduction techniques like meditation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">Risk Assessment</h5>
+                </div>
+                <div class="card-body">
+                    {% if "no symptoms" in message|lower %}
+                        <div class="text-center mb-4">
+                            <div class="display-4 text-muted mb-2">0%</div>
+                            <h3 class="text-muted">No Risk</h3>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% elif risk_level == 'high' %}
+                        <div class="text-center mb-4">
+                            <div class="display-4 text-danger mb-2">90%</div>
+                            <h3 class="text-danger">High Risk</h3>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 90%" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% elif risk_level == 'medium' %}
+                        <div class="text-center mb-4">
+                            <div class="display-4 text-warning mb-2">50%</div>
+                            <h3 class="text-warning">Medium Risk</h3>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% else %}
+                        <div class="text-center mb-4">
+                            <div class="display-4 text-success mb-2">15%</div>
+                            <h3 class="text-success">Low Risk</h3>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     {% endif %}
-
-                    <div class="progress mt-4 rounded-pill" style="height: 25px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated
-                             {% if risk_level == 'high' %}bg-danger{% elif risk_level == 'medium' %}bg-warning{% else %}bg-success{% endif %}"
-                             role="progressbar" style="width: {{ risk_score }}%;"
-                             aria-valuenow="{{ risk_score }}" aria-valuemin="0" aria-valuemax="100">
-                            <span class="font-weight-bold">{{ risk_score }}%</span>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="font-weight-bold mb-3">Risk Level Indicators</h6>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>0%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-1">
+                            <span class="text-success">Low</span>
+                            <span class="text-warning">Medium</span>
+                            <span class="text-danger">High</span>
                         </div>
                     </div>
                 </div>
@@ -62,7 +165,6 @@
             <div class="card shadow-lg border-0 rounded-lg">
                 <div class="card-header bg-white p-4 d-flex justify-content-between align-items-center">
                     <h4 class="mb-0 font-weight-bold text-primary">Your Upcoming Appointments</h4>
-                    <a href="#" class="btn btn-outline-primary btn-sm d-none d-md-block">View All</a>
                 </div>
                 <div class="card-body p-0">
                     {% if appointments %}
@@ -105,64 +207,138 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_css %}
 <style>
-    .card {
-        border-radius: 1rem;
+     /* Additional styles for health tips */
+    .alert-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #155724;
+        border-radius: 0.5rem;
     }
-
-    .shadow-lg {
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+    .list-unstyled li {
+        padding: 0.25rem 0;
+        display: flex;
+        align-items: flex-start;
+    }
+    .fa-check-circle {
+        font-size: 0.875rem;
+        margin-top: 0.2rem;
+    }
+    .fa-lightbulb {
+        font-size: 1.25rem;
+    }
+    /* Custom styles for the alerts */
+    .alert-danger-light {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #721c24;
+        border-radius: 0.5rem;
+    }
+    .alert-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #856404;
+        border-radius: 0.5rem;
+    }
+    .alert-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #155724;
+        border-radius: 0.5rem;
     }
     
-    .alert {
-        border: none;
+    /* Emergency action buttons */
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+        font-weight: 500;
+        transition: all 0.2s;
     }
-
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Button spacing and sizing */
+    .gap-2 {
+        gap: 0.5rem;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* General card styling */
+    .card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    /* List group items */
+    .list-group-item {
+        transition: all 0.2s ease;
+        border-left: 0;
+        border-right: 0;
+    }
+    .list-group-item:first-child {
+        border-top: 0;
+    }
     .list-group-item:hover {
         background-color: #f8f9fa;
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-        z-index: 1; /* Keeps it above other elements on hover */
-    }
-
-    .transition-300 {
-        transition: all 0.3s ease-in-out;
+        transform: translateX(2px);
     }
     
+    /* Risk percentage display */
+    .display-4 {
+        font-size: 3.5rem;
+        font-weight: 300;
+        line-height: 1.2;
+    }
+    
+    /* Progress bars */
     .progress {
-        background-color: #e9ecef; /* Lighter background for the progress bar track */
+        border-radius: 10px;
+        overflow: visible;
+        background-color: #e9ecef;
     }
-
     .progress-bar {
-        font-size: 0.8rem;
-        background-color: var(--bs-danger);
+        border-radius: 10px;
+        transition: width 0.6s ease;
     }
-    .progress-bar.bg-warning {
-        background-color: #ffc107 !important;
-    }
-    .progress-bar.bg-success {
-        background-color: #28a745 !important;
-    }
-    .progress-bar.bg-danger {
-        background-color: #dc3545 !important;
-    }
-
-    /* Primary and other color adjustments */
-    .bg-primary {
-        background-color: #007bff !important;
-    }
-    .text-primary {
-        color: #007bff !important;
-    }
-    .text-success {
-        color: #28a745 !important;
-    }
-    .text-warning {
-        color: #ffc107 !important;
-    }
-    .text-danger {
-        color: #dc3545 !important;
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .d-flex.flex-md-row {
+            flex-direction: column !important;
+        }
+        .mb-md-0 {
+            margin-bottom: 1rem !important;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
 {% endblock %}
