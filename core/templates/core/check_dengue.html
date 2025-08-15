@@ -1,6 +1,6 @@
 {% extends 'core/base_p_dashboard.html' %}
 {% block dashboard_content %}
-<div class="container">
+<div class="container py-4">
   <div class="card shadow border-0 rounded-lg overflow-hidden">
     <div class="card-header bg-primary text-white py-3">
       <h3 class="mb-0 text-center"><i class="fas fa-thermometer-half me-2"></i> Dengue Symptoms Assessment</h3>
@@ -13,43 +13,39 @@
         </div>
 
         <div class="severity-legend mb-4 p-3 bg-light rounded">
-          <div class="row text-center">
-            <div class="col">
-              <span class="border border-success p-2 bg-white"><i class="fas fa-check-circle me-1 text-success"></i> 0 - None</span>
-            </div>
-            <div class="col">
-              <span class="border border-info p-2 bg-white"><i class="fas fa-smile me-1 text-info"></i> 1 - Mild</span>
-            </div>
-            <div class="col">
-              <span class="border border-warning p-2 bg-white"><i class="fas fa-exclamation-circle me-1 text-warning"></i> 2 - Medium</span>
-            </div>
-            <div class="col">
-              <span class="border border-danger p-2 bg-white"><i class="fas fa-times-circle me-1 text-danger"></i> 3 - Severe</span>
-            </div>
-          </div>
+    <div class="d-flex justify-content-around flex-wrap text-center">
+        <div class="p-2 col-6 col-sm-3">
+            <span class="border border-success p-2 bg-white d-block"><i class="fas fa-check-circle me-1 text-success"></i> 0 - None</span>
         </div>
+        <div class="p-2 col-6 col-sm-3">
+            <span class="border border-info p-2 bg-white d-block"><i class="fas fa-smile me-1 text-info"></i> 1 - Mild</span>
+        </div>
+        <div class="p-2 col-6 col-sm-3">
+            <span class="border border-warning p-2 bg-white d-block"><i class="fas fa-exclamation-circle me-1 text-warning"></i> 2 - Medium</span>
+        </div>
+        <div class="p-2 col-6 col-sm-3">
+            <span class="border border-danger p-2 bg-white d-block"><i class="fas fa-times-circle me-1 text-danger"></i> 3 - Severe</span>
+        </div>
+    </div>
+</div>
 
         <div class="row g-4">
           {% for key, label in symptoms %}
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <div class="symptom-card p-3 h-100">
               <label class="form-label fw-bold text-primary mb-3">{{ label }}</label>
               <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
                 <label class="btn border border-success">
-                  <input type="radio" name="{{ key }}" value="0" required> 0
-                  <small class="d-block">None</small>
+                  <input type="radio" name="{{ key }}" value="0" required> 0 <small class="d-block">None</small>
                 </label>
                 <label class="btn border border-info">
-                  <input type="radio" name="{{ key }}" value="1"> 1
-                  <small class="d-block">Mild</small>
+                  <input type="radio" name="{{ key }}" value="1"> 1 <small class="d-block">Mild</small>
                 </label>
                 <label class="btn border border-warning">
-                  <input type="radio" name="{{ key }}" value="2"> 2
-                  <small class="d-block">Medium</small>
+                  <input type="radio" name="{{ key }}" value="2"> 2 <small class="d-block">Medium</small>
                 </label>
                 <label class="btn border border-danger">
-                  <input type="radio" name="{{ key }}" value="3"> 3
-                  <small class="d-block">Severe</small>
+                  <input type="radio" name="{{ key }}" value="3"> 3 <small class="d-block">Severe</small>
                 </label>
               </div>
             </div>
@@ -58,7 +54,7 @@
         </div>
 
         <div class="text-center mt-5">
-          <button type="submit" class="btn btn-primary btn-lg px-4 py-2">
+          <button type="submit" class="btn btn-primary btn-lg px-5 py-3 w-100 w-md-auto">
             <i class="fas fa-check-circle me-2"></i> Analyze Symptoms
           </button>
         </div>
@@ -66,10 +62,9 @@
     </div>
   </div>
 
-  <!-- Result Section -->
   <div id="dengue-result" class="mt-5" style="display: none">
     <div class="card shadow border-0 rounded-lg overflow-hidden">
-      <div class="card-header bg-success text-white py-3">
+      <div class="card-header bg-primary text-white py-3">
         <h4 class="mb-0 text-center"><i class="fas fa-clipboard-check me-2"></i> Assessment Results</h4>
       </div>
       <div class="card-body p-4 p-md-5">
@@ -83,10 +78,10 @@
         </div>
 
         <div class="risk-scale mb-5">
-          <div class="scale-labels d-flex justify-content-between mb-2">
-            <span class="text-success">Low Risk (0-30%)</span>
-            <span class="text-warning">Moderate Risk (30-60%)</span>
-            <span class="text-danger">High Risk (60-100%)</span>
+          <div class="scale-labels d-flex justify-content-between flex-wrap mb-2">
+            <span class="text-success small">Low Risk (0-30%)</span>
+            <span class="text-warning small">Moderate Risk (30-60%)</span>
+            <span class="text-danger small">High Risk (60-100%)</span>
           </div>
           <div class="progress" style="height: 20px; border-radius: 10px;">
             <div id="risk-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
@@ -94,16 +89,14 @@
           </div>
         </div>
 
-        <div id="recommendation" class="alert alert-light border mt-4" style="display: none;">
+        <div id="recommendation" class="alert mt-4" style="display: none;">
           <div class="d-flex">
             <div class="flex-shrink-0 me-3">
               <i class="fas fa-comment-medical text-primary fa-2x"></i>
             </div>
             <div>
               <h5 class="alert-heading">Recommendation</h5>
-              <div id="recommendation-text">
-                
-              </div>
+              <div id="recommendation-text"></div>
             </div>
           </div>
         </div>
@@ -145,54 +138,62 @@
       return;
     }
 
-    const maxSeverity = 30;
-    const denguePercentage = Math.min((totalSeverity / maxSeverity) * 100, 100).toFixed(2);
+    const maxSeverity = 3 * symptoms.length; // Max score is 3 per symptom
+    const denguePercentage = Math.min((totalSeverity / maxSeverity) * 100, 100).toFixed(0);
 
     // Update UI
-    document.getElementById("dengue-result").style.display = "block";
+    const resultSection = document.getElementById("dengue-result");
+    resultSection.style.display = "block";
     document.getElementById("dengue-percentage").innerText = denguePercentage + "%";
 
     const riskBar = document.getElementById("risk-bar");
     riskBar.style.width = denguePercentage + "%";
     
-    // Adjust progress bar color based on risk level
-    let recommendation = "";
+    const recommendationAlert = document.getElementById("recommendation");
+    const recommendationText = document.getElementById("recommendation-text");
+    
+    // Adjust progress bar and alert based on risk level
     if (denguePercentage < 30) {
-      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-success";
-      recommendation = "Your symptoms indicate a low probability of dengue. However, monitor your symptoms and seek medical attention if they worsen.";
+      riskBar.classList.add("bg-success");
+      recommendationAlert.classList.add("alert-success");
+      recommendationText.innerHTML = "Your symptoms indicate a low probability of dengue. However, continue to monitor your symptoms and seek medical attention if they worsen.";
     } else if (denguePercentage < 60) {
-      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-warning";
-      recommendation = "Your symptoms suggest a moderate probability of dengue. Consider consulting a healthcare provider for further evaluation.";
+      riskBar.classList.add("bg-warning");
+      recommendationAlert.classList.add("alert-warning");
+      recommendationText.innerHTML = "Your symptoms suggest a moderate probability of dengue. Consider consulting a healthcare provider for further evaluation.";
     } else {
-      riskBar.className = "progress-bar progress-bar-striped progress-bar-animated bg-danger";
-      recommendation = "Your symptoms indicate a high probability of dengue. Please seek medical attention as soon as possible.";
+      riskBar.classList.add("bg-danger");
+      recommendationAlert.classList.add("alert-danger");
+      recommendationText.innerHTML = "Your symptoms indicate a high probability of dengue. Please seek medical attention as soon as possible.";
     }
-
-    // Show recommendation
-    document.getElementById("recommendation-text").innerHTML = recommendation;
-    document.getElementById("recommendation").style.display = "block";
+    
+    recommendationAlert.style.display = "block";
 
     // Scroll to result
-    document.getElementById("dengue-result").scrollIntoView({ behavior: "smooth" });
+    resultSection.scrollIntoView({ behavior: "smooth" });
   });
 
-  // Add active class to selected buttons
   document.querySelectorAll('.btn-group-toggle .btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      // Remove active class from siblings
+      // Remove all color classes from siblings and add appropriate one to the clicked button
       this.parentNode.querySelectorAll('.btn').forEach(sibling => {
         sibling.classList.remove('bg-success', 'bg-info', 'bg-warning', 'bg-danger', 'text-white');
       });
       
-      // Add appropriate class based on button type
-      if (this.classList.contains('border-success')) {
-        this.classList.add('bg-success', 'text-white');
-      } else if (this.classList.contains('border-info')) {
-        this.classList.add('bg-info', 'text-white');
-      } else if (this.classList.contains('border-warning')) {
-        this.classList.add('bg-warning', 'text-white');
-      } else if (this.classList.contains('border-danger')) {
-        this.classList.add('bg-danger', 'text-white');
+      const input = this.querySelector('input');
+      switch(input.value) {
+        case '0':
+          this.classList.add('bg-success', 'text-white');
+          break;
+        case '1':
+          this.classList.add('bg-info', 'text-white');
+          break;
+        case '2':
+          this.classList.add('bg-warning', 'text-white');
+          break;
+        case '3':
+          this.classList.add('bg-danger', 'text-white');
+          break;
       }
     });
   });
@@ -217,40 +218,53 @@
 </script>
 
 <style>
+  /* Base card and container styles */
+  .card-header {
+      border-radius: 8px 8px 0 0;
+  }
+  .card-header h3 {
+      font-weight: bold;
+      font-size: 1.5rem;
+  }
+  .card-body {
+      padding: 2rem;
+  }
+  
+  /* Symptom Card and buttons */
   .symptom-card {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #0d6efd;
-    transition: all 0.3s ease;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #0d6efd;
+      transition: all 0.3s ease;
   }
   
   .symptom-card:hover {
-    background-color: #f1f8ff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background-color: #f1f8ff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   }
   
   .btn-group-toggle .btn {
-    padding: 0.5rem;
-    text-align: center;
-    background-color: white;
-    transition: all 0.2s ease;
+      padding: 0.75rem 0.5rem; /* Increased padding for better touch targets */
+      font-size: 1rem;
+      border: 1px solid #dee2e6;
+      background-color: white;
+      transition: all 0.2s ease;
+      flex: 1 1 auto; /* Ensures buttons fill the container on mobile */
   }
   
-  .btn-group-toggle .btn:hover {
-    background-color: #f8f9fa;
+  .btn-group-toggle .btn small {
+      font-size: 0.75rem;
+      font-weight: normal;
   }
-  
-  .severity-legend {
-    border: 1px solid #dee2e6;
+
+  .btn-group-toggle .btn:not(.text-white) {
+      color: #343a40; /* Ensure text is visible when button is not selected */
   }
-  
-  .risk-indicator {
-    max-width: 250px;
-  }
-  
+
+  /* Progress bar and risk indicator */
   .risk-circle {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -260,19 +274,43 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     border: 8px solid #e9ecef;
   }
+
+  #dengue-percentage {
+    font-size: 3rem;
+  }
   
+  .progress {
+    height: 25px;
+  }
+  .progress-bar {
+      transition: width 0.5s ease-in-out;
+  }
+  
+  .risk-scale .scale-labels {
+      font-size: 0.85rem;
+  }
+
+  /* Responsive styles */
   @media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+    .symptom-card {
+        padding: 1rem;
+    }
+    .symptom-card label {
+        font-size: 1rem;
+    }
+    .btn-group-toggle .btn {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.875rem;
+    }
     .risk-circle {
-      width: 150px;
-      height: 150px;
+        width: 150px;
+        height: 150px;
     }
-    
     #dengue-percentage {
-      font-size: 2.5rem;
-    }
-    
-    .severity-legend .col {
-      margin-bottom: 0.5rem;
+        font-size: 2.5rem;
     }
   }
 </style>

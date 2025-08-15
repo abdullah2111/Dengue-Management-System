@@ -2,7 +2,7 @@
 {% load static %}
 {% block dashboard_content %}
 <div class="container my-5">
-    <div class="card shadow border-0 mb-5">
+    <div class="card shadow-lg border-0 rounded-3 mb-5">
         <div class="card-body p-4 p-md-5">
             <h3 class="text-center text-primary fw-bold mb-3">Set New Appointment Schedule</h3>
             <p class="text-muted text-center mb-5">Fill out the details below to add a new schedule entry.</p>
@@ -13,19 +13,19 @@
                 <div class="row g-4 justify-content-center">
                     <div class="col-md-6">
                         <label for="{{ form.available_days.id_for_label }}" class="form-label fw-semibold">
-                            <i class="fas fa-calendar-alt me-2"></i>Available Days
+                            <i class="fas fa-calendar-alt me-2 text-muted"></i>Available Days
                         </label>
                         {{ form.available_days }}
                     </div>
                     <div class="col-md-6">
                         <label for="{{ form.available_time.id_for_label }}" class="form-label fw-semibold">
-                            <i class="fas fa-clock me-2"></i>Available Time
+                            <i class="fas fa-clock me-2 text-muted"></i>Available Time
                         </label>
                         {{ form.available_time }}
                     </div>
                     <div class="col-md-6">
                         <label for="{{ form.appointment_fee.id_for_label }}" class="form-label fw-semibold">
-                            <i class="fas fa-money-bill-wave me-2"></i>Appointment Fees
+                            <i class="fas fa-money-bill-wave me-2 text-muted"></i>Appointment Fees
                         </label>
                         <div class="input-group">
                             <span class="input-group-text">৳</span>
@@ -34,12 +34,12 @@
                     </div>
                     <div class="col-md-6">
                         <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold">
-                            <i class="fas fa-toggle-on me-2"></i>Status
+                            <i class="fas fa-toggle-on me-2 text-muted"></i>Status
                         </label>
                         {{ form.status }}
                     </div>
                     <div class="col-12 text-center mt-5">
-                        <button type="submit" class="btn btn-primary px-5 btn-lg">
+                        <button type="submit" class="btn btn-primary px-5 btn-lg shadow-sm">
                             <i class="fas fa-plus-circle me-2"></i>Add Schedule
                         </button>
                     </div>
@@ -48,15 +48,15 @@
         </div>
     </div>
     
-    <div class="card shadow border-0 mt-5">
+    <div class="card shadow-lg border-0 rounded-3 mt-5">
         <div class="card-body p-4 p-md-5">
-            <h4 class="mb-4 text-secondary">My Schedules</h4>
+            <h4 class="mb-4 text-primary fw-bold">My Schedules</h4>
             
             {% if schedules %}
             <div class="list-group">
                 {% for schedule in schedules %}
-                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
-                    <div class="d-flex align-items-center">
+                <div class="list-group-item list-group-item-action d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3">
+                    <div class="d-flex align-items-center mb-3 mb-md-0">
                         <div class="me-4 text-primary">
                             <i class="fas fa-calendar-day fa-2x"></i>
                         </div>
@@ -75,9 +75,12 @@
                         <button type="button" class="btn btn-sm btn-outline-secondary me-2 edit-schedule-btn" data-bs-toggle="modal" data-bs-target="#editScheduleModal" data-id="{{ schedule.id }}" data-days="{{ schedule.available_days }}" data-time="{{ schedule.available_time }}" data-fees="{{ schedule.appointment_fee }}" data-status="{{ schedule.status }}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <a href="{% url 'delete_appointment_schedule' schedule.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this schedule?');">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
+                        <form method="POST" action="{% url 'delete_appointment_schedule' schedule.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this schedule?');">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% endfor %}
@@ -148,7 +151,7 @@
             const form = editScheduleModal.querySelector('#edit-schedule-form');
             
             modalTitle.textContent = `Edit Schedule for ${availableDays}`;
-            form.action = `/edit_appointment_schedule/${scheduleId}/`;
+            form.action = `{% url 'edit_appointment_schedule' 0 %}`.replace('0', scheduleId);
 
             editScheduleModal.querySelector('#edit_available_days').value = availableDays;
             editScheduleModal.querySelector('#edit_available_time').value = availableTime;

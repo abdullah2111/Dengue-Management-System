@@ -1,97 +1,234 @@
-{% extends 'core/base.html' %}
-{% block title %}Doctor Dashboard{% endblock %}
-
-{% block navbar %}{% endblock navbar %}
-
-{% block content %}
+{% extends 'core/base.html' %} {% block title %}Doctor Dashboard{% endblock %}
+{% block navbar %}{% endblock navbar %} {% block content %}
 <style>
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: fixed;
-        left: 0;
-        top: 0;
-        background-color: #2c3e50;
-        z-index: 1000;
-        overflow-y: auto;
-    }
+  /* Custom CSS for the dashboard layout */
 
+  
+
+  /* Offcanvas styling */
+  .offcanvas.offcanvas-start {
+    background-color: #2c3e50;
+    width: 250px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Main content area */
+  .main-content {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding-left: 1rem;
+    transition: margin-left 0.3s ease-in-out;
+  }
+
+  /* Desktop styles */
+  @media (min-width: 768px) {
     .main-content {
-        margin-left: 250px;
-        padding: 2rem;
-        background-color: #f8f9fa;
-        min-height: 100vh;
+      margin-left: 250px;
+      padding-left: 1.5rem;
     }
 
-    .sidebar .nav-link {
-        color: white;
-        border-radius: 5px;
-        padding: 10px 15px;
-        transition: background-color 0.3s;
+    /* Hide toggle button on desktop */
+    .navbar-toggler {
+      display: none !important;
     }
 
-    .sidebar .nav-link:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+    /* Show sidebar permanently on desktop */
+    .offcanvas.offcanvas-start {
+      visibility: visible;
+      transform: none;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+    }
+  }
+
+  /* Mobile styles */
+  @media (max-width: 767.98px) {
+    /* Hide toggle button when sidebar is open */
+    .offcanvas.show ~ .navbar-toggler {
+      display: none;
     }
 
-    .sidebar .nav-link.active {
-        background-color: #3498db;
+    /* Show toggle button when sidebar is closed */
+    .offcanvas:not(.show) ~ .navbar-toggler {
+      display: flex;
     }
+  }
+
+  /* Active navigation link styling */
+  .nav-link.active {
+    background-color: #3498db;
+    color: #fff !important;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-header,
+  .sidebar-footer {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Toggle button styling */
+  .navbar-toggler {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1050;
+    background-color: #34495e;
+    border: none;
+    border-radius: 5px;
+    padding: 0.25rem;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-toggler .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    width: 1em;
+    height: 1em;
+  }
 </style>
 
-<div class="sidebar">
-    <div class="text-center p-4 border-bottom border-dark">
-        <div class="mb-3">
+<div class="container-fluid p-0">
+  <div class="row g-0">
+    <!-- Sidebar - visible by default on desktop, offcanvas on mobile -->
+    <div
+      class="offcanvas offcanvas-start"
+      tabindex="-1"
+      id="sidebarMenu"
+      aria-labelledby="sidebarMenuLabel"
+    >
+      <div class="offcanvas-header d-md-none border-bottom sidebar-header">
+        <h5 class="offcanvas-title text-white" id="sidebarMenuLabel">
+          Navigation
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body d-flex flex-column p-0">
+        <div class="sidebar-header text-center p-4 border-bottom">
+          <div class="mb-3">
             <i class="fas fa-user-md fa-3x text-light"></i>
+          </div>
+          {% if request.user.is_authenticated %}
+          <h5 class="text-white mb-1">Dr. {{ request.user.full_name }}</h5>
+          {% else %}
+          <h5 class="text-white mb-1">Guest</h5>
+          {% endif %}
         </div>
-        {% if request.user.is_authenticated %}
-            <h5 class="text-white mb-1">Dr. {{ request.user.full_name }}</h5>
-        {% else %}
-            <h5 class="text-white mb-1">Guest</h5>
-        {% endif %}
-    </div>
 
-   <div class="p-2">
-        <ul class="nav flex-column">
+        <div class="p-3 flex-grow-1">
+          <ul class="nav flex-column">
             <li class="nav-item mb-2">
-                <a href="{% url 'doctorDashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'doctorDashboard' %}active{% endif %}">
-                    <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                </a>
+              <a
+                href="{% url 'doctorDashboard' %}"
+                class="nav-link text-white {% if request.resolver_match.url_name == 'doctorDashboard' %}active{% endif %}"
+              >
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+              </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'appointment_schedule' %}" class="nav-link {% if request.resolver_match.url_name == 'appointment_schedule' %}active{% endif %}">
-                   <i class="fas fa-calendar-plus me-2"></i> Appointment Schedule
-                </a>
+              <a
+                href="{% url 'appointment_schedule' %}"
+                style = "padding-right: 8px;"
+                class="nav-link text-white {% if request.resolver_match.url_name == 'appointment_schedule' %}active{% endif %}"
+              >
+                <i class="fas fa-calendar-plus me-1"></i> Appointment Schedule
+              </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'view_appointments' %}" class="nav-link {% if request.resolver_match.url_name == 'view_appointments' %}active{% endif %}">
-                    <i class="fas fa-list me-2"></i> Appointments
-                </a>
+              <a
+                href="{% url 'view_appointments' %}"
+                class="nav-link text-white {% if request.resolver_match.url_name == 'view_appointments' %}active{% endif %}"
+              >
+                <i class="fas fa-list me-2"></i> Appointments
+              </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'view_patients' %}" class="nav-link {% if request.resolver_match.url_name == 'view_patients' %}active{% endif %}">
-                    <i class="fas fa-procedures me-2"></i> Patients
-                </a>
+              <a
+                href="{% url 'view_patients' %}"
+                class="nav-link text-white {% if request.resolver_match.url_name == 'view_patients' %}active{% endif %}"
+              >
+                <i class="fas fa-procedures me-2"></i> Patients
+              </a>
             </li>
             <li class="nav-item mb-2">
-                <a href="{% url 'doctor_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'doctor_profile' %}active{% endif %}">
-                    <i class="fas fa-user-cog me-2"></i> Profile
-                </a>
+              <a
+                href="{% url 'doctor_profile' %}"
+                class="nav-link text-white {% if request.resolver_match.url_name == 'doctor_profile' %}active{% endif %}"
+              >
+                <i class="fas fa-user-cog me-2"></i> Profile
+              </a>
             </li>
-        </ul>
-    </div>
+          </ul>
+        </div>
 
-    <div class="p-3 border-top border-dark">
-        <a href="{% url 'logout' %}" class="btn btn-danger w-100">
+        <div class="p-3 border-top border-dark sidebar-footer mt-auto">
+          <a href="{% url 'logout' %}" class="btn btn-danger w-100">
             <i class="fas fa-sign-out-alt me-2"></i> Logout
-        </a>
+          </a>
+        </div>
+      </div>
     </div>
+
+    <!-- Toggle button - only visible on mobile when sidebar is closed -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="offcanvas"
+      data-bs-target="#sidebarMenu"
+      aria-controls="sidebarMenu"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <main class="main-content p-4">
+      <div id="content-area">{% block dashboard_content %} {% endblock %}</div>
+    </main>
+  </div>
 </div>
 
-<div class="main-content">
-    <div id="content-area">
-        {% block dashboard_content %}
-        {% endblock %}
-    </div>
-</div>
+<!-- JavaScript to handle the toggle button visibility -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebarMenu");
+    const toggleBtn = document.querySelector(".navbar-toggler");
+
+    // Hide toggle button when sidebar is shown
+    sidebar.addEventListener("show.bs.offcanvas", function () {
+      if (window.innerWidth < 768) {
+        toggleBtn.style.display = "none";
+      }
+    });
+
+    // Show toggle button when sidebar is hidden
+    sidebar.addEventListener("hidden.bs.offcanvas", function () {
+      if (window.innerWidth < 768) {
+        toggleBtn.style.display = "flex";
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener("resize", function () {
+      if (window.innerWidth >= 768) {
+        // On desktop, ensure toggle is hidden
+        toggleBtn.style.display = "none";
+      } else {
+        // On mobile, show toggle only if sidebar is closed
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+        toggleBtn.style.display =
+          bsOffcanvas && bsOffcanvas._isShown ? "none" : "flex";
+      }
+    });
+  });
+</script>
 {% endblock %}

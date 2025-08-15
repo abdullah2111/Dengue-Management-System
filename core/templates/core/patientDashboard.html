@@ -1,53 +1,103 @@
 {% extends 'core/base_p_dashboard.html' %}
 
 {% block dashboard_content %}
-<div class="container mt-4">
+<div class="container py-4">
     <div class="row">
         <div class="col-12 mb-4">
-            <div class="card bg-primary text-white shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title">Welcome back, {{ request.user.full_name }}! 👋</h2>
-                    <p class="card-text">Here is a quick overview of your appointments.</p>
+            <div class="card bg-primary text-white shadow-lg border-0 rounded-lg">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="card-title h3 font-weight-bold mb-2">Welcome back, {{ request.user.full_name }}! 👋</h2>
+                    <p class="card-text text-light">Here is a quick overview of your appointments and health status.</p>
                 </div>
             </div>
         </div>
-        
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">Your Upcoming Appointments</h4>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body p-4">
+                    <h4 class="mb-3 font-weight-bold text-primary">Your Risk Level</h4>
+                    {% if risk_level == 'high' %}
+                        <div class="alert alert-danger shadow-sm border-0 rounded-lg p-3" role="alert">
+                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle mr-3"></i>
+                                High Risk Alert!
+                            </h5>
+                            <p class="mb-0">{{ message | safe }}</p>
+                        </div>
+                    {% elif risk_level == 'medium' %}
+                        <div class="alert alert-warning shadow-sm border-0 rounded-lg p-3" role="alert">
+                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle mr-3"></i>
+                                Warning!
+                            </h5>
+                            <p class="mb-0">{{ message | safe }}</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success shadow-sm border-0 rounded-lg p-3" role="alert">
+                            <h5 class="alert-heading font-weight-bold d-flex align-items-center">
+                                <i class="fas fa-check-circle mr-3"></i>
+                                Low Risk
+                            </h5>
+                            <p class="mb-0">{{ message | safe }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="progress mt-4 rounded-pill" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated
+                             {% if risk_level == 'high' %}bg-danger{% elif risk_level == 'medium' %}bg-warning{% else %}bg-success{% endif %}"
+                             role="progressbar" style="width: {{ risk_score }}%;"
+                             aria-valuenow="{{ risk_score }}" aria-valuemin="0" aria-valuemax="100">
+                            <span class="font-weight-bold">{{ risk_score }}%</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-white p-4 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 font-weight-bold text-primary">Your Upcoming Appointments</h4>
+                    <a href="#" class="btn btn-outline-primary btn-sm d-none d-md-block">View All</a>
+                </div>
+                <div class="card-body p-0">
                     {% if appointments %}
                         <div class="list-group list-group-flush">
                             {% for appointment in appointments %}
-                            <div class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1 text-primary">Dr. {{ appointment.schedule.doctor.user.full_name }}</h5>
-                                    {% if appointment.status == 'pending' %}
-                                        <span class="badge bg-warning text-dark">{{ appointment.get_status_display }}</span>
-                                    {% elif appointment.status == 'confirmed' %}
-                                        <span class="badge bg-success">{{ appointment.get_status_display }}</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
-                                    {% endif %}
-                                </div>
-                                
-                                <p class="mb-1 text-muted">
-                                    {{ appointment.schedule.doctor.designation }}, {{ appointment.schedule.doctor.degree }}
-                                </p>
-                                <p class="mb-1"><strong>Specialty:</strong> {{ appointment.schedule.doctor.specialty }}</p>
-                                <p class="mb-1"><strong>Scheduled On:</strong> {{ appointment.booked_on|date:"F d, Y H:i" }}</p>
-                                <p class="mb-1"><strong>Appointment Fee:</strong> <span class="text-success fw-bold">৳{{ appointment.schedule.appointment_fee }}</span></p>
-                            </div>
+                                <a href="#" class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-start transition-300">
+                                    <div class="w-100">
+                                        <div class="d-flex w-100 justify-content-between mb-2">
+                                            <h5 class="mb-0 font-weight-bold text-primary">Dr. {{ appointment.schedule.doctor.user.full_name }}</h5>
+                                            {% if appointment.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'confirmed' %}
+                                                <span class="badge bg-success align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex flex-column flex-md-row justify-content-between text-muted small">
+                                            <div class="mb-1 mb-md-0">
+                                                <p class="mb-0">{{ appointment.schedule.doctor.designation }}, {{ appointment.schedule.doctor.degree }}</p>
+                                                <p class="mb-0"><strong>Specialty:</strong> {{ appointment.schedule.doctor.specialty }}</p>
+                                            </div>
+                                            <div class="text-md-right mt-2 mt-md-0">
+                                                <p class="mb-0"><strong>Scheduled On:</strong> {{ appointment.booked_on|date:"F d, Y H:i" }}</p>
+                                                <p class="mb-0"><strong>Appointment Fee:</strong> <span class="text-success font-weight-bold">৳{{ appointment.schedule.appointment_fee }}</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="alert alert-info text-center" role="alert">
-                            <h4 class="alert-heading">No Appointments</h4>
-                            <p>You have no appointments scheduled at this time.</p>
-                            
-                            
+                        <div class="alert alert-info text-center m-4" role="alert">
+                            <h4 class="alert-heading font-weight-bold">No Appointments</h4>
+                            <p class="mb-0">You have no appointments scheduled at this time.</p>
                         </div>
                     {% endif %}
                 </div>
@@ -55,4 +105,64 @@
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 1rem;
+    }
+
+    .shadow-lg {
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+    }
+    
+    .alert {
+        border: none;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        z-index: 1; /* Keeps it above other elements on hover */
+    }
+
+    .transition-300 {
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .progress {
+        background-color: #e9ecef; /* Lighter background for the progress bar track */
+    }
+
+    .progress-bar {
+        font-size: 0.8rem;
+        background-color: var(--bs-danger);
+    }
+    .progress-bar.bg-warning {
+        background-color: #ffc107 !important;
+    }
+    .progress-bar.bg-success {
+        background-color: #28a745 !important;
+    }
+    .progress-bar.bg-danger {
+        background-color: #dc3545 !important;
+    }
+
+    /* Primary and other color adjustments */
+    .bg-primary {
+        background-color: #007bff !important;
+    }
+    .text-primary {
+        color: #007bff !important;
+    }
+    .text-success {
+        color: #28a745 !important;
+    }
+    .text-warning {
+        color: #ffc107 !important;
+    }
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
 {% endblock %}
