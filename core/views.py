@@ -34,24 +34,10 @@ def signup_view(request):
         if user_type == 'patient':
             form = PatientSignUpForm(request.POST)
         else:
-            form = DoctorSignUpForm(request.POST) # Use the DoctorSignUpForm
+            form = DoctorSignUpForm(request.POST) 
         
         if form.is_valid():
-            user = form.save()  # This now creates both User and Doctor/Patient
-            
-            # The following block is now redundant and should be removed.
-            # if user_type == 'doctor':
-            #     Doctor.objects.create(
-            #         user=user,
-            #         degree=form.cleaned_data['degree'],
-            #         specialty=form.cleaned_data['specialty'],
-            #         registration_number=form.cleaned_data['registration_number'],
-            #         designation=form.cleaned_data['designation']
-            #     )
-            # else:
-            #     # If the user is a patient, create the Patient instance
-            #     Patient.objects.create(user=user)
-            
+            user = form.save()   
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('home')
