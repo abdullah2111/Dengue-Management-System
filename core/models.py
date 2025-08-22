@@ -6,7 +6,7 @@ from django.utils import timezone
 class User(AbstractUser):
     is_patient = models.BooleanField(default=False)
     is_doctor = models.BooleanField(default=False)
-    full_name = models.CharField(max_length=255)  # Add this line
+    full_name = models.CharField(max_length=255) 
     age = models.IntegerField(null=True, blank=True)
     mobile_number = models.CharField(max_length=15, blank=True)
 
@@ -17,10 +17,10 @@ class User(AbstractUser):
 
 class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    # Add any additional patient fields here
+    
     
     def __str__(self):
-        return self.user.full_name  # Update to show full name
+        return self.user.full_name  
 
 class Doctor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
@@ -30,7 +30,7 @@ class Doctor(models.Model):
     designation = models.CharField(max_length=100)
     
     def __str__(self):
-        return self.user.full_name  # Update to show full name
+        return self.user.full_name  
     
 
 
@@ -97,7 +97,7 @@ class AppointmentBooking(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     schedule = models.ForeignKey(AppointmentSchedule, on_delete=models.CASCADE)
     booked_on = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  # Default is 'pending'
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)  
 
     def __str__(self):
         return f"Appointment with {self.schedule.doctor.user.full_name} for {self.patient.user.full_name} - Status: {self.get_status_display()}"

@@ -56,7 +56,7 @@ class DoctorSignUpForm(UserCreationForm):
         user = super().save(commit=False)
         user.is_doctor = True
         user.is_patient = False
-        user.email = self.cleaned_data.get('email') # Ensure email is set
+        user.email = self.cleaned_data.get('email') 
         user.full_name = self.cleaned_data.get('full_name')
         user.age = self.cleaned_data.get('age')
         user.mobile_number = self.cleaned_data.get('mobile_number')
