@@ -1,6 +1,39 @@
 {% extends 'core/base_d_dashboard.html' %}
-
 {% block dashboard_content %}
-<h2>view Patient</h2>
-<p>This is your  view Patient</p>
+<div class="container-fluid my-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">My Patients</h2>
+        </div>
+        <div class="card-body">
+            {% if patients %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Age</th>
+                                <th scope="col">Mobile Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients %}
+                            <tr>
+                                <td>{{ patient.user.full_name }}</td>
+                                <td>{{ patient.user.age }}</td>
+                                <td>{{ patient.user.mobile_number }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    <h4 class="alert-heading">No Patients to Display</h4>
+                    <p>You have not had any appointments booked yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

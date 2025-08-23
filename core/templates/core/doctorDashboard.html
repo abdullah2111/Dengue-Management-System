@@ -1,6 +1,114 @@
 {% extends 'core/base_d_dashboard.html' %}
 
 {% block dashboard_content %}
-<h2 class="mb-4">Dashboard Overview</h2>
-<p>Welcome back, Dr. {{ request.user.full_name }} 👨‍⚕️</p>
+<div class="container-fluid py-4 px-lg-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Dashboard Overview</h2>
+                <p class="lead mb-0">Welcome back, Dr. {{ request.user.full_name }} 👋</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        <div class="col">
+            <div class="card border-0 shadow-sm transition-300">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-success mb-1">Confirmed</h5>
+                        <h3 class="card-text fw-bold">{{ status_counts.confirmed }}</h3>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x text-success opacity-25"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm transition-300">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-warning mb-1">Pending</h5>
+                        <h3 class="card-text fw-bold">{{ status_counts.pending }}</h3>
+                    </div>
+                    <i class="fas fa-hourglass-half fa-3x text-warning opacity-25"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm transition-300">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-info mb-1">Done</h5>
+                        <h3 class="card-text fw-bold">{{ status_counts.done }}</h3>
+                    </div>
+                    <i class="fas fa-calendar-check fa-3x text-info opacity-25"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm transition-300">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-danger mb-1">Rejected</h5>
+                        <h3 class="card-text fw-bold">{{ status_counts.rejected }}</h3>
+                    </div>
+                    <i class="fas fa-times-circle fa-3x text-danger opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-white p-4 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 font-weight-bold text-primary">Today's Confirmed Appointments</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% if today_confirmed_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Patient Name</th>
+                                        <th scope="col">Time</th>
+                                        <th scope="col">Booked On</th>
+                                        <th scope="col">Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in today_confirmed_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.patient.user.full_name }}</td>
+                                        <td>{{ appointment.schedule.available_time }}</td>
+                                        <td>{{ appointment.booked_on|date:"F d, Y H:i" }}</td>
+                                        <td><span class="badge bg-success">৳{{ appointment.schedule.appointment_fee }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center m-4" role="alert">
+                            <h4 class="alert-heading">No Confirmed Appointments Today</h4>
+                            <p>You have no confirmed appointments scheduled for today.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .card.transition-300 {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card.transition-300:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
 {% endblock %}

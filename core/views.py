@@ -21,12 +21,12 @@ def home(req):
 
 
 def logout_user(request):
-    logout(request)  # Logs out the user
+    logout(request)  
     messages.success(request, 'You have logged out successfully.')  # Show success message
     return redirect('home')
 
 
-# core/views.py
+
 
 def signup_view(request):
     if request.method == 'POST':
@@ -68,9 +68,9 @@ def login_user(request):
             if (user_type == 'doctor' and user.is_doctor) or (user_type == 'patient' and user.is_patient):
                 login(request, user)
                 if user.is_doctor:
-                    return redirect('doctor_dashboard')
+                    return redirect('doctorDashboard')
                 else:
-                    return redirect('patient_dashboard')
+                    return redirect('PatientDashboard')
             else:
                 messages.error(request, 'Invalid user type for this account')
         else:
@@ -99,16 +99,7 @@ def patient_dashboard(request):
 
 
 
-# Load the model and features once when the server starts
-try:
-    model = joblib.load('ml_model/risk_model.pkl')
-    model_features = joblib.load('ml_model/features.pkl')
-except FileNotFoundError:
-    print("Warning: ML model files not found. Run ml_model.py to create them.")
-    model = None
-    model_features = []
 
-# Define high-risk symptoms for a clear rule-based override
 HIGH_RISK_SYMPTOMS = [
     'bleeding gums', 'vomiting blood', 'blood in stool', 'rapid pulse',
     'low blood pressure', 'cold extremities', 'breathing difficulty',
@@ -124,9 +115,6 @@ NON_SEVERE_SYMPTOMS = [
 ]
 
 def get_patient_features(patient):
-    """Extracts features for rule-based assessment."""
-    
-    # Get the current date in the user's local time zone
     local_today = timezone.localtime(timezone.now()).date()
     
     today_logs = SymptomLog.objects.filter(patient=patient, date_logged=local_today)
@@ -149,9 +137,10 @@ def get_patient_features(patient):
 
 @login_required
 def patientDashboard(request):
-    appointments = None
     risk_level = 'low'
     message = ""
+    upcoming_appointments = []
+    appointment_history = []
 
     try:
         patient_instance = Patient.objects.get(user=request.user)
@@ -159,8 +148,8 @@ def patientDashboard(request):
         local_today = timezone.localtime(timezone.now()).date()
         today_logs = SymptomLog.objects.filter(patient=patient_instance, date_logged=local_today)
 
+        # 1. Rule-based Health Status
         if not today_logs.exists():
-            # Rule 1: No logs in the present day
             message = "No symptoms logged today. Please track your symptoms to get a health overview."
             risk_level = 'low'
         
@@ -168,28 +157,35 @@ def patientDashboard(request):
             non_severe_count, has_severe_symptom = get_patient_features(patient_instance)
 
             if has_severe_symptom:
-                # Rule 4: Severe symptoms detected
                 risk_level = 'high'
                 message = "Critical symptoms detected. Seek immediate medical attention! ⚠️"
             
             elif non_severe_count >= 7:
-                # Rule 3: More than 7 non-severe symptoms
                 risk_level = 'medium'
                 message = "Your symptoms suggest moderate risk. Consider consulting a doctor."
             
             else:
-                # Rule 2: Less than 7 non-severe symptoms
                 risk_level = 'low'
                 message = "No significant symptoms detected. Your health risk is low. ✅"
         
-        appointments = AppointmentBooking.objects.filter(patient=patient_instance).order_by('-booked_on')
+        # 2. Separate Appointments
+        upcoming_appointments = AppointmentBooking.objects.filter(
+            patient=patient_instance, 
+            booking_date__gte=local_today
+        ).order_by('booking_date')
+
+        appointment_history = AppointmentBooking.objects.filter(
+            patient=patient_instance,
+            booking_date__lt=local_today
+        ).order_by('-booking_date')
 
     except Patient.DoesNotExist:
         message = "No patient data found for this account."
         risk_level = 'low'
 
     return render(request, 'core/patientDashboard.html', {
-        'appointments': appointments,
+        'upcoming_appointments': upcoming_appointments,
+        'appointment_history': appointment_history,
         'message': message,
         'risk_level': risk_level,
     })
@@ -232,9 +228,9 @@ def track_symptoms(request):
         symptom = request.POST.get('symptom')
         severity = request.POST.get('severity')
 
-        print(f"Symptom: {symptom}, Severity: {severity}")  # Debugging line to check form data
+        print(f"Symptom: {symptom}, Severity: {severity}")  
 
-        if symptom and severity:  # Check if data is not empty
+        if symptom and severity:  
             SymptomLog.objects.create(
                 patient=patient_instance,
                 symptom=symptom,
@@ -308,25 +304,29 @@ def doctor_appointment(request):
         messages.error(request, 'Patient not found.')
         return redirect('home')
     
-    # Get the available appointment schedules for all doctors
     schedules = AppointmentSchedule.objects.filter(status='available')
     
-    # Handle appointment booking if the patient is making a request
     if request.method == 'POST':
         schedule_id = request.POST.get('schedule_id')
+        booking_date = request.POST.get('booking_date')  # Get the selected date
+        
         schedule = get_object_or_404(AppointmentSchedule, id=schedule_id)
-        if not AppointmentBooking.objects.filter(patient=patient_instance, schedule=schedule).exists():
-            # Create a new booking
-            AppointmentBooking.objects.create(patient=patient_instance, schedule=schedule)
-            messages.success(request, f"Appointment booked with {schedule.doctor.user.full_name}!")
+
+        # Check for existing booking on the same date
+        if not AppointmentBooking.objects.filter(patient=patient_instance, schedule=schedule, booking_date=booking_date).exists():
+            AppointmentBooking.objects.create(
+                patient=patient_instance, 
+                schedule=schedule,
+                booking_date=booking_date  
+            )
+            messages.success(request, f"Appointment booked with {schedule.doctor.user.full_name} for {booking_date}!")
         else:
-            messages.warning(request, 'You have already booked this appointment.')
+            messages.warning(request, 'You have already booked this appointment for the selected date.')
 
     context = {
         'schedules': schedules,
     }
     return render(request, 'core/doctor_appointment.html', context)
-
 
 
 
@@ -368,8 +368,51 @@ def doctor_dashboard(request):
     return render(request, 'core/base_d_dashboard.html')
 
 
+@login_required
 def doctorDashboard(request):
-    return render(request, 'core/doctorDashboard.html')
+    try:
+        doctor_instance = Doctor.objects.get(user=request.user)
+        local_today = timezone.localtime(timezone.now()).date()
+
+        # Fetch status counts separately
+        status_counts = {
+            'confirmed': AppointmentBooking.objects.filter(
+                schedule__doctor=doctor_instance,
+                status='confirmed'
+            ).count(),
+            'pending': AppointmentBooking.objects.filter(
+                schedule__doctor=doctor_instance,
+                status='pending'
+            ).count(),
+            'rejected': AppointmentBooking.objects.filter(
+                schedule__doctor=doctor_instance,
+                status='rejected'
+            ).count(),
+            'done': AppointmentBooking.objects.filter(
+                schedule__doctor=doctor_instance,
+                status='Done'
+            ).count(),
+        }
+
+        # Get today's confirmed appointments
+        today_confirmed_appointments = AppointmentBooking.objects.filter(
+            schedule__doctor=doctor_instance,
+            booking_date=local_today,
+            status='confirmed'
+        ).order_by('booked_on')
+
+        context = {
+            'doctor_instance': doctor_instance,
+            'status_counts': status_counts,
+            'today_confirmed_appointments': today_confirmed_appointments,
+        }
+        return render(request, 'core/doctorDashboard.html', context)
+    
+    except Doctor.DoesNotExist:
+        return render(request, 'core/doctorDashboard.html', {'error': 'Doctor profile not found.'})
+    
+
+
 
 @login_required
 def appointment_schedule(request):
@@ -437,43 +480,35 @@ def delete_schedule(request, schedule_id):
     return redirect('appointment_schedule')
 
 
-# @login_required
-# def edit_schedule(request, schedule_id):
-#     schedule = get_object_or_404(AppointmentSchedule, pk=schedule_id, doctor__user=request.user)
-
-#     if request.method == 'POST':
-#         form = AppointmentScheduleForm(request.POST, instance=schedule) # <-- Removed request.FILES
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, 'Schedule updated successfully!')
-#             return redirect('appointment_schedule')
-#         else:
-#             for field, errors in form.errors.items():
-#                 for error in errors:
-#                     messages.error(request, f"{field.replace('_', ' ').title()}: {error}")
-#     else:
-#         form = AppointmentScheduleForm(instance=schedule)
-
-#     return render(request, 'core/edit_schedule.html', {'form': form, 'schedule': schedule})
-
 
 
 
 @login_required
 def view_appointments(request):
     try:
-        # Get the logged-in doctor instance
         doctor_instance = Doctor.objects.get(user=request.user)
+        local_today = timezone.localtime(timezone.now()).date()
 
-        # Fetch all appointments related to the doctor
-        appointments = AppointmentBooking.objects.filter(schedule__doctor=doctor_instance).order_by('-booked_on')
+        # Fetch all appointments for the doctor
+        all_appointments = AppointmentBooking.objects.filter(schedule__doctor=doctor_instance)
 
+        # Separate appointments into upcoming and history
+        upcoming_appointments = all_appointments.filter(
+            booking_date__gte=local_today
+        ).order_by('booking_date')
+
+        appointment_history = all_appointments.filter(
+            booking_date__lt=local_today
+        ).order_by('-booking_date')
+        
     except Doctor.DoesNotExist:
-        appointments = None
+        upcoming_appointments = None
+        appointment_history = None
         messages.error(request, "Doctor not found.")
 
     return render(request, 'core/view_appointments.html', {
-        'appointments': appointments
+        'upcoming_appointments': upcoming_appointments,
+        'appointment_history': appointment_history,
     })
 
 
@@ -483,10 +518,10 @@ def change_appointment_status(request, appointment_id):
     if request.method == 'POST':
         appointment = get_object_or_404(AppointmentBooking, id=appointment_id)
 
-        # Ensure that the logged-in doctor is the one associated with this appointment
         if appointment.schedule.doctor.user == request.user:
             new_status = request.POST.get('status')
-            if new_status in ['pending', 'confirmed', 'rejected']:
+            
+            if new_status in ['pending', 'confirmed', 'rejected', 'Done']:
                 appointment.status = new_status
                 appointment.save()
                 messages.success(request, 'Appointment status updated successfully!')
@@ -499,8 +534,35 @@ def change_appointment_status(request, appointment_id):
 
 
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Doctor, AppointmentBooking, Patient
+
+@login_required
 def view_patients(request):
-    return render(request, 'core/view_patients.html')
+    try:
+        # Get the logged-in doctor instance
+        doctor_instance = Doctor.objects.get(user=request.user)
+
+        # Get all appointments for the doctor
+        all_appointments = AppointmentBooking.objects.filter(
+            schedule__doctor=doctor_instance
+        )
+
+        # Get a list of unique patients from those appointments
+        # We use .distinct() to avoid showing the same patient multiple times
+        patients = Patient.objects.filter(
+            appointmentbooking__in=all_appointments
+        ).distinct()
+
+        return render(request, 'core/view_patients.html', {
+            'patients': patients
+        })
+
+    except Doctor.DoesNotExist:
+        return render(request, 'core/view_patients.html', {'error': 'Doctor profile not found.'})
+    
+
 
 @login_required
 def doctor_profile(request):

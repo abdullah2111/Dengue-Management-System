@@ -34,12 +34,11 @@ class PatientSignUpForm(BaseSignUpForm):
         # Create the Patient object
         patient = Patient.objects.create(
             user=user,
-            # Add any additional patient-specific fields if you have them
+            
         )
         return user
 
 class DoctorSignUpForm(UserCreationForm):
-    # Add the fields from the Doctor model
     full_name = forms.CharField(max_length=255, required=True, label='Full Name')
     degree = forms.CharField(max_length=100, required=True, label='Degree')
     specialty = forms.CharField(max_length=100, required=True, label='Specialty')
@@ -50,7 +49,6 @@ class DoctorSignUpForm(UserCreationForm):
         model = User
         fields = UserCreationForm.Meta.fields + ('full_name', 'email', 'mobile_number', 'age')
 
-    # Override the save method to create both User and Doctor instances
     def save(self, commit=True):
         # Create the User object
         user = super().save(commit=False)

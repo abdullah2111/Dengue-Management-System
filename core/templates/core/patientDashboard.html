@@ -1,4 +1,5 @@
 {% extends 'core/base_p_dashboard.html' %}
+{% load static %}
 
 {% block dashboard_content %}
 <div class="container-fluid py-4 px-lg-5">
@@ -12,7 +13,7 @@
                             <p class="mb-0 text-light">Here's your personalized health overview</p>
                         </div>
                         <div class="ml-auto d-none d-md-block">
-                            
+                            <i class="fas fa-user-md fa-3x opacity-25"></i>
                         </div>
                     </div>
                 </div>
@@ -60,37 +61,36 @@
                             </div>
                             <div class="mb-3">{{ message | safe }}</div>
                             <div class="alert alert-warning-light bg-warning-light-10 border-left border-warning border-3 p-3 small">
-                                <i class="fas fa-calendar-check mr-2"></i> Consider scheduling a check-up soon <a href=""></a>
+                                <i class="fas fa-calendar-check mr-2"></i> Consider scheduling a check-up soon
                             </div>
                         </div>
                     {% else %}
-    <div class="alert-content">
-        <div class="d-flex align-items-center mb-3">
-            {% if "no symptoms" in message|lower %}
-                <i class="fas fa-smile fa-2x text-success mr-3 me-1"></i>
-                <h4 class="mb-0 font-weight-bold text-success">No Symptoms Detected</h4>
-            {% else %}
-                <i class="fas fa-check-circle fa-2x text-success mr-3 me-1"></i>
-                <h4 class="mb-0 font-weight-bold text-success">Low Risk Status</h4>
-            {% endif %}
-        </div>
-        <div class="mb-3">{{ message | safe }}</div>
-        <div class="alert alert-success-light bg-success-light-10 border-left border-success border-3 p-3">
-            <div class="d-flex align-items-start">
-                
-                <div>
-                    <h5 class="font-weight-bold text-success mb-2">Health Maintenance Tips</h5>
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Drink plenty of fluids (8-10 glasses daily) to stay hydrated</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Get 7-9 hours of quality sleep each night</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Eat balanced meals with fruits and vegetables</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Practice stress-reduction techniques like meditation</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endif %}
+                        <div class="alert-content">
+                            <div class="d-flex align-items-center mb-3">
+                                {% if "no symptoms" in message|lower %}
+                                    <i class="fas fa-smile fa-2x text-success mr-3 me-1"></i>
+                                    <h4 class="mb-0 font-weight-bold text-success">No Symptoms Detected</h4>
+                                {% else %}
+                                    <i class="fas fa-check-circle fa-2x text-success mr-3 me-1"></i>
+                                    <h4 class="mb-0 font-weight-bold text-success">Low Risk Status</h4>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">{{ message | safe }}</div>
+                            <div class="alert alert-success-light bg-success-light-10 border-left border-success border-3 p-3">
+                                <div class="d-flex align-items-start">
+                                    <div>
+                                        <h5 class="font-weight-bold text-success mb-2">Health Maintenance Tips</h5>
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Drink plenty of fluids (8-10 glasses daily) to stay hydrated</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Get 7-9 hours of quality sleep each night</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Eat balanced meals with fruits and vegetables</li>
+                                            <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i> Practice stress-reduction techniques like meditation</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -103,9 +103,9 @@
                     <h4 class="mb-0 font-weight-bold text-primary">Your Upcoming Appointments</h4>
                 </div>
                 <div class="card-body p-0">
-                    {% if appointments %}
+                    {% if upcoming_appointments %}
                         <div class="list-group list-group-flush">
-                            {% for appointment in appointments %}
+                            {% for appointment in upcoming_appointments %}
                                 <a href="#" class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-start transition-300">
                                     <div class="w-100">
                                         <div class="d-flex w-100 justify-content-between mb-2">
@@ -114,8 +114,10 @@
                                                 <span class="badge bg-warning text-dark align-self-start">{{ appointment.get_status_display }}</span>
                                             {% elif appointment.status == 'confirmed' %}
                                                 <span class="badge bg-success align-self-start">{{ appointment.get_status_display }}</span>
-                                            {% else %}
+                                            {% elif appointment.status == 'rejected' %}
                                                 <span class="badge bg-danger align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info align-self-start">{{ appointment.get_status_display }}</span>
                                             {% endif %}
                                         </div>
                                         <div class="d-flex flex-column flex-md-row justify-content-between text-muted small">
@@ -124,7 +126,7 @@
                                                 <p class="mb-0"><strong>Specialty:</strong> {{ appointment.schedule.doctor.specialty }}</p>
                                             </div>
                                             <div class="text-md-right mt-2 mt-md-0">
-                                                <p class="mb-0"><strong>Scheduled On:</strong> {{ appointment.booked_on|date:"F d, Y H:i" }}</p>
+                                                <p class="mb-0"><strong>Scheduled Date:</strong> {{ appointment.booking_date|date:"F d, Y" }}</p>
                                                 <p class="mb-0"><strong>Appointment Fee:</strong> <span class="text-success font-weight-bold">৳{{ appointment.schedule.appointment_fee }}</span></p>
                                             </div>
                                         </div>
@@ -134,8 +136,57 @@
                         </div>
                     {% else %}
                         <div class="alert alert-info text-center m-4" role="alert">
-                            <h4 class="alert-heading font-weight-bold">No Appointments</h4>
-                            <p class="mb-0">You have no appointments scheduled at this time.</p>
+                            <h4 class="alert-heading font-weight-bold">No Upcoming Appointments</h4>
+                            <p class="mb-0">You have no appointments scheduled for the future.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-white p-4 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 font-weight-bold text-primary">Appointment History</h4>
+                </div>
+                <div class="card-body p-0">
+                    {% if appointment_history %}
+                        <div class="list-group list-group-flush">
+                            {% for appointment in appointment_history %}
+                                <a href="#" class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-start transition-300">
+                                    <div class="w-100">
+                                        <div class="d-flex w-100 justify-content-between mb-2">
+                                            <h5 class="mb-0 font-weight-bold text-primary">Dr. {{ appointment.schedule.doctor.user.full_name }}</h5>
+                                            {% if appointment.status == 'pending' %}
+                                                <span class="badge bg-warning text-dark align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'confirmed' %}
+                                                <span class="badge bg-success align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'rejected' %}
+                                                <span class="badge bg-danger align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info align-self-start">{{ appointment.get_status_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex flex-column flex-md-row justify-content-between text-muted small">
+                                            <div class="mb-1 mb-md-0">
+                                                <p class="mb-0">{{ appointment.schedule.doctor.designation }}, {{ appointment.schedule.doctor.degree }}</p>
+                                                <p class="mb-0"><strong>Specialty:</strong> {{ appointment.schedule.doctor.specialty }}</p>
+                                            </div>
+                                            <div class="text-md-right mt-2 mt-md-0">
+                                                <p class="mb-0"><strong>Scheduled Date:</strong> {{ appointment.booking_date|date:"F d, Y" }}</p>
+                                                <p class="mb-0"><strong>Appointment Fee:</strong> <span class="text-success font-weight-bold">৳{{ appointment.schedule.appointment_fee }}</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info text-center m-4" role="alert">
+                            <h4 class="alert-heading font-weight-bold">No Appointment History</h4>
+                            <p class="mb-0">Your past appointments will appear here.</p>
                         </div>
                     {% endif %}
                 </div>
